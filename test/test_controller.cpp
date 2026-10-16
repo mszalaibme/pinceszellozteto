@@ -15,7 +15,7 @@ int main() { return run([] {
     CHECK(c.update(b(80,900001),o(900001),900001).state == ControllerState::MinimumOffTimer);
     CHECK(c.update(b(80,1200000),o(1200000),1200000).fanRequested);
     CHECK(!c.update(b(80,1200001),o(1200001,28,65),1200001).fanRequested);
-    Configuration cfg; cfg.minimumOffTime=0;
+    Configuration cfg; cfg.ventilationMinimumOffTime=0;
     VentilationController cold(cfg); CHECK(cold.update(b(80,0),o(0),0).fanRequested);
     CHECK(cold.update(b(80,1,10),o(1),1).state == ControllerState::BasementTooCold);
     VentilationController stale(cfg); CHECK(stale.update(b(80,0),o(0),0).fanRequested);
@@ -41,7 +41,7 @@ int main() { return run([] {
     CHECK(summer.setConfiguration(cfg));
     VentilationController invalidConstructor(invalid); CHECK(invalidConstructor.configuration().isValid());
     // Fixed cellar climate, vary outdoor AH to test exact humidity thresholds.
-    cfg.minimumOnTime=0;
+    cfg.ventilationMinimumOnTime=0;
     VentilationController h(cfg);
     const double ah=psychrometrics::absoluteHumidityGm3(14,80);
     auto outsideDelta=[&](double delta,Timestamp t) {

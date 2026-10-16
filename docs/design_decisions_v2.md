@@ -1,0 +1,18 @@
+# A kibővített specifikáció értelmezése
+
+A teljes új követelménylista a specification-v2.hu.md fájlban szerepel. A 0.2.0 a Windows-szimulátorig tartó 1–4. fázist valósítja meg. A firmware, LVGL, NVS és hálózat külön következő fázis, nem a natív szimulátor függősége.
+
+## Fontos pontosítások
+
+1. **Két fogyasztó egy döntésben.** Az új DryingController használja a közös Configuration objektumot és a dehumidifier feedbacket. AUTO-ban a két kimenet soha nem igaz egyszerre. A korábbi VentilationController megmaradt kizárólag történeti regressziókhoz; az új szimulátor és a PlatformIO smoke belépőpont DryingController-t használ.
+2. **Új RH hiszterézis.** Indulás legalább cél+3%, leállási igény cél RH-nál. A korábbi 65/62% szabály nem az új vezérlő működése. Konfigurációs mezők a specifikáció szerinti ventilationMinimumOnTime stb. nevekre migrálva; az NVS még nincs implementálva, így nincs létező flash-séma, amit migrálni kellene.
+3. **Biztonság elsőbbsége.** A specifikáció prioritáslistájában a szenzorhiba később szerepel, de végrehajtásban megelőzi az automatikus szárítást. Szenzorhiba, óra visszalépése és explicit készülék-fault azonnali KI; a ventilátor hideg/nedvesült kültér esetén is azonnal KI. Normál cél-RH leállás és stratégiaváltás figyelembe veszi a minimum BE időket. Nem tartunk fenn veszélyes kimenetet pusztán minimum BE idő miatt.
+4. **Kompresszorvédelem manuálisan is.** A páramentesítő minimum KI idő a manuális bekapcsolásra is érvényes. Bootkor mindkét minimum KI idő az első update-től indul. A fizikai készülékmodell saját minimum KI és indulási késleltetést is tartalmaz.
+5. **Nem bizonyított restart.** A dehumidifierAutoRestartSupported alapértéke false. Ellenőrzés nélkül nincs vezérelt páramentesítő-indítás; a capability a manuális páramentesítő parancsra is szükséges. A no-restart forgatókönyv szándékos konfiguráció/készülék eltérést modellez (controller true, készülék false), hogy a feedback-hibafelismerés is látható legyen.
+6. **Command és működés külön adat.** NO_POWER_DRAW nem bizonyít tele tartályt. A grace lejárta után a konnektor bekapcsolva maradhat, a controller hibát jelez. Ezzel helyi tartályürítés után a készülék újra tud indulni, és Running feedbacknél a diagnózis megszűnik. Explicit Fault esetén a konnektorkérés KI. Unknown/stale feedback külön figyelmeztetés, nem kitalált Running és nem bizonyított készülékhiba.
+7. **Becslés nem tartályérzékelés.** A tank estimate opcionális, Running feedback alatt a beállított becsült L/h értéket integrálja. Nem állít le és nem diagnosztizál tele tartályt. A valódi készüléktartályt csak a szimulátormodell ismeri. Az EMPTY_TANK szimulációs esemény külön üríti a fizikai modellt és nullázza a controller becslését; a becslés nullázása önmagában nem szüntet meg hardverhibát.
+8. **Hatástalanság csak warning.** Folyamatosan visszajelzett működés mellett háromórás ablakban az AH javulását vizsgáljuk. A küszöb és időtartam konfigurálható. Nagy falnedvesség miatt egy működő készülék is lehet elégtelen; a warning nem kapcsolja le.
+9. **Közös hőmérsékleti alap.** Megmarad a nyers ΔAH küszöb és az előző validáció gőznyomás-védelme. A tömegmérlegben a bejövő vízgőzsűrűség a pincei térfogatáram hőmérsékleti alapjára kerül, különben a meleg kültéri levegő hibás vízterhelést adna.
+10. **Észszerű modellhatár.** A hőmodell egyszerű egycsomópontos közelítés; a vízkivonás empirikus T/RH görbe. Nem tartalmazzuk a konkrét készülék gyártói görbéjét, falpára-diffúziót vagy teljes energia-/nyomásdinamikát. A talált túlhűlési/felületi kondenzációs korlátok nem tekinthetők hardveresen megoldottnak.
+
+A BOTH mód opcionális, ebben a kiadásban nincs felhasználói módja. A két önálló logikai kimenet lehetővé teszi későbbi bevezetését, külön szabályokkal és tesztekkel.

@@ -5,4 +5,5 @@
 *.py text eol=lf
 *.yml text eol=lf
 *.ini text eol=lf
+*.cmd text eol=crlf
 CMakeLists.txt text eol=lf

@@ -41,13 +41,13 @@ ControllerOutput VentilationController::update(const ClimateReading& b, const Cl
         >= psychrometrics::vaporPressureHpa(b.temperatureC, b.humidityRH))
         return finish(false, ControllerState::OutdoorAirTooHumid, out.highHumidityWarning
             ? "HIGH HUMIDITY - OUTDOOR AIR TOO WET" : "Outdoor vapor pressure is not lower");
-    if (out.differenceGm3 <= config_.stopHumidityAdvantage)
+    if (out.differenceGm3 <= config_.stopVentilationHumidityAdvantage)
         return finish(false, ControllerState::OutdoorAirTooHumid, out.highHumidityWarning
             ? "HIGH HUMIDITY - OUTDOOR AIR TOO WET" : "Outdoor air too humid");
     const Timestamp elapsed = now - changedAt_;
     if (fan_) {
-        if (b.humidityRH <= config_.targetBasementRH - config_.rhHysteresis) {
-            if (elapsed < config_.minimumOnTime)
+        if (b.humidityRH <= config_.targetBasementRH - config_.rhStartHysteresis) {
+            if (elapsed < config_.ventilationMinimumOnTime)
                 return finish(true, ControllerState::MinimumOnTimer, "Minimum ON timer");
             return finish(false, ControllerState::HumidityOK, "Humidity OK");
         }
@@ -55,10 +55,10 @@ ControllerOutput VentilationController::update(const ClimateReading& b, const Cl
     }
     if (b.humidityRH <= config_.targetBasementRH)
         return finish(false, ControllerState::HumidityOK, "Humidity OK");
-    if (out.differenceGm3 < config_.minHumidityAdvantage)
+    if (out.differenceGm3 < config_.minVentilationHumidityAdvantage)
         return finish(false, ControllerState::OutdoorAirTooHumid, out.highHumidityWarning
             ? "HIGH HUMIDITY - INSUFFICIENT DRYING ADVANTAGE" : "Insufficient drying advantage");
-    if (elapsed < config_.minimumOffTime)
+    if (elapsed < config_.ventilationMinimumOffTime)
         return finish(false, ControllerState::MinimumOffTimer, "Minimum OFF timer");
     return finish(true, ControllerState::Drying, "Outdoor air is drier");
 }

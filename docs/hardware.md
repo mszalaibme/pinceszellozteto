@@ -11,6 +11,8 @@ ESP32-3248S035C-CYD pontos revision és gyártói kapcsolási rajz nincs megadva
 | Szenzor I2C | Ismeretlen | szabad SDA/SCL, felhúzók, kábelhossz |
 | Szabad GPIO | Nincs igazolt lista | kapcsolási rajz és folytonosságmérés |
 | Relé | Ismeretlen | pin, 3.3 V kompatibilitás, active HIGH/LOW |
+| Páramentesítő kontaktorvezérlés | Ismeretlen | külön GPIO, polaritás, tekercs/driver |
+| Páramentesítő monitor | Ismeretlen | mérési mód, galvanikus leválasztás, kommunikáció |
 
 Az include/board_config.h összes pinje -1, a polaritás Unknown. A még nem kész firmware nem használhatja ezeket ellenőrzés nélkül. ESP32 boot strap, flash, bemenet-only és bekapcsolási tranziensek vizsgálata kötelező a konkrét SoC és board alapján.
 

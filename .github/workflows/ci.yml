@@ -1,4 +1,4 @@
-name: Core build and tests
+name: Windows simulator and regression tests
 
 on:
   push:
@@ -11,16 +11,30 @@ permissions:
 
 jobs:
   core:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -S . -B build -A x64
       - name: Build
-        run: cmake --build build --config Debug
+        run: cmake --build build --config Release
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure -V
+        run: ctest --test-dir build -C Release --output-on-failure -V
+      - name: Run all twelve scenarios and prepare portable package
+        shell: pwsh
+        run: |
+          build/Release/pinceszellozteto.exe --scenario all --out package/simulation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item build/Release/pinceszellozteto.exe package/
+          Copy-Item tools/windows-launch.cmd package/START.cmd
+          Copy-Item docs/windows_quickstart.md package/README.md
+      - name: Dashboard logic smoke test (mock DOM)
+        run: node tools/dashboard_smoke_test.cjs package/simulation-output/report.html
+      - name: Windows CLI and Unicode paths
+        run: python tools/test_cli.py build/Release/pinceszellozteto.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinceszellozteto-windows-x64
+          path: package/
+          if-no-files-found: error

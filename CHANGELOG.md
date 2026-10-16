@@ -2,6 +2,26 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.2.0] - 2026-10-16
+
+### Új alapkövetelmények
+
+- A kibővített specifikáció dokumentálva, a fázisterv 1–9-re frissítve. Az 1–4. fázis Windows-szimulátorig elkészült.
+- DryingController ventilátor/páramentesítő/IDLE választással, kizárt AUTO egyidejű működéssel, 68/65% RH hiszterézissel.
+- Manuális módok, külön minimum BE/KI idők, konzervatív boot és manuálisan is érvényes kompresszorvédelem.
+- Restart capability, IDehumidifierMonitor, no-power grace, feedback-hiány figyelmeztetés és opcionális hatástalansági monitor.
+- Tényleges készülék-/kompresszor-/tankmodell, T/RH-függő vízkivonás, EMPTY_TANK és restart események.
+- A víztömegmérlegbe bekerült a páramentesítő által kivont víz; egyszerű, dokumentált termikus modell.
+- Windows x64 EXE, 12 scenario, CSV, önálló offline HTML-riport nyolc grafikonnal, időcsúszkával és visszajátszással.
+- Opcionális matplotlib ábrázoló, Unicode fájlút- és exportteszt, mock DOM dashboard-logikai teszt.
+- A CI Windows Release buildre és letölthető portable artifactre állt át; Linux nem célrendszer.
+
+### Kompatibilitás
+
+- A Configuration mezőnevei a v2 specifikációra migráltak. NVS-séma még nem létezett.
+- A régi VentilationController a történeti regressziókhoz megmarad; a szimulátor az új DryingController-t használja.
+- GPIO, relépolaritás és kompresszoros hálózati kapcsolás továbbra is ellenőrizendő; a firmware/LVGL/NVS/REST következő fázis.
+
 ## [0.1.2] - 2026-10-16
 
 ### Hozzáadva

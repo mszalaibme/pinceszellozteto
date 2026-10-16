@@ -24,7 +24,7 @@ A kültéri saját hőmérsékletén számított AH közvetlen használata hibá
 M(t+dt) = M_eq + (M(t)-M_eq)*exp(-k*dt)
 ```
 
-Az implementáció expm1-t használ a kicsi időlépések numerikus pontosságához. Alapértékekkel ACH=100/26≈3.846/h. A hőmérséklet egy lépésen belül rögzített; az eltelt idő explicit másodpercben adandó meg (0…86400).
+Az implementáció expm1-t használ a kicsi időlépések numerikus pontosságához. Alapértékekkel ACH=100/26≈3.846/h. A nedvességintegrálás idején a hőmérséklet rögzített; a 0.2.0 futtató ezután külön hőlépést végez; az eltelt idő explicit másodpercben adandó meg (0…86400).
 
 ## Telítés és kondenzátum
 
@@ -35,13 +35,13 @@ A `setTemperatureC()` a vízgőztömeget megőrzi, amíg nem érjük el a telít
 Minden lépésben ellenőrizhető:
 
 ```
-M_current + water_out + condensate = M_initial + generated + water_in
+M_current + water_out + condensate + extracted = M_initial + generated + water_in
 ```
 
 Minden tag grammban értendő, a be/ki és forrástagok kumulatívak. Melegítés fix térfogatban, légcsere és kondenzáció nélkül megtartja M-et és AH-t, miközben RH változik.
 
 ## Határok és tesztek
 
-Nincs közvetlen RH állapotváltozó. Nincs épület-hőmodell, nyomásdinamika, szivárgás, kondenzációs látens hő vagy mért felületi hőmérséklet. A térfogatra vonatkozó egyszerűsítés nyomáskiegyenlítődő, kis vízgőz-tömegáramú pincei közelítés; nem teljes szárazlevegő- és energiaegyenleg. Ebből nem következik a valós felületek kondenzációmentessége.
+Nincs közvetlen RH állapotváltozó. A 0.2.0 egy egyszerű, paraméterezett termikus közelítést ad (simulation.md), de nincs részletes épület-hőmodell, nyomásdinamika, szivárgás, kondenzációs látens hő vagy mért felületi hőmérséklet. A térfogatra vonatkozó egyszerűsítés nyomáskiegyenlítődő, kis vízgőz-tömegáramú pincei közelítés; nem teljes szárazlevegő- és energiaegyenleg. Ebből nem következik a valós felületek kondenzációmentessége.
 
 A `test_mass_balance` ellenőrzi a zárt levegő melegítését/hűtését, az ismert g/h forrást, az analitikus légcserét, a kondenzátum megőrzését, az időlépésfüggetlenséget és 10 000 determinisztikus változó állapot mérlegzárását. A hibás paramétereket és kültéri határállapotot a modell visszautasítja.

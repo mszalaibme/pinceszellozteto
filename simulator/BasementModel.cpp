@@ -34,6 +34,22 @@ double BasementModel::relativeHumidity() const {
 ClimateReading BasementModel::reading(Timestamp now) const {
     return {temperatureC_,relativeHumidity(),now,true};
 }
+double BasementModel::removeWaterGram(double requested) {
+    if(!std::isfinite(requested) || requested<0) throw std::invalid_argument("Invalid water extraction");
+    const double removed=std::min(requested,vaporMassGram_);
+    vaporMassGram_-=removed; balance_.extractedGram+=removed;
+    return removed;
+}
+void BasementModel::evolveTemperature(const ClimateReading& outside,bool fanOn,double heat,double seconds,
+    double wallT,double capacity,double conductance) {
+    if(!outside.isPlausible() || !std::isfinite(heat) || heat<0 || !std::isfinite(seconds) || seconds<0 || seconds>86400
+        || !validT(wallT) || !std::isfinite(capacity) || capacity<=0 || !std::isfinite(conductance) || conductance<=0)
+        throw std::invalid_argument("Invalid thermal boundary");
+    const double airLoss=fanOn ? parameters_.fanAirflowM3PerHour/3600*1200 : 0;
+    const double loss=conductance+airLoss;
+    const double equilibrium=(conductance*wallT+airLoss*outside.temperatureC+heat)/loss;
+    setTemperatureC(std::clamp(equilibrium+(temperatureC_-equilibrium)*std::exp(-loss*seconds/capacity),-20.0,50.0));
+}
 void BasementModel::step(const ClimateReading& outside, bool fanOn, double seconds) {
     if (!std::isfinite(seconds) || seconds<0 || seconds>86400)
         throw std::invalid_argument("Step must be finite and within 0..86400 seconds");

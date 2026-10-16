@@ -1,7 +1,5 @@
-# PC szimuláció — PHASE 3 részben kész
+# Windows szimulátor
 
-A BasementModel tiszta C++17 könyvtár, ESP32 nélkül fordul. A víztömegmérlegmodell kész és unit tesztelt; a forgatókönyves CLI, CSV export és plot még a 3. fázis további része.
+A 0.2.0 már teljes futtatót tartalmaz: BasementModel + DehumidifierModel + SimulationRunner + DryingController. A 12 forgatókönyv definíciója a `scenarios()` függvényben van; ugyanazokat használja a CLI és a scenario teszt.
 
-Állapotváltozó a vízgőz tömege grammban. A relatív páratartalmat soha nem integráljuk vagy interpoláljuk közvetlenül. Részletek: [moisture_model.md](../docs/moisture_model.md).
-
-A kültéri mérés a fizikai határállapot. A szenzorhiba injektálását a vezérlőnek adott mérésben kell elvégezni, nem a fizikai levegő állapotát NaN-ra állítani. A hőmérséklet explicit előírt határfeltétel; a modell nem állítja, hogy hőtároló falakat, hővezetést vagy nyomásdinamikát szimulál.
+Indítás: [windows_quickstart.md](../docs/windows_quickstart.md). Modell: [simulation.md](../docs/simulation.md), [moisture_model.md](../docs/moisture_model.md), [dehumidifier.md](../docs/dehumidifier.md). A szenzorhiba csak a controllernek adott mérést érvényteleníti; a fizikai kültéri levegő ettől nem lesz NaN.

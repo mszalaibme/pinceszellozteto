@@ -1,53 +1,71 @@
-# ESP32 pince-szellőztetés
+# Pince-szellőztető és páramentesítő vezérlő
 
-Buildelhető, platformfüggetlen C++17 vezérlőmag. **PHASE 1 és PHASE 2 kész és PC-n tesztelve.** A teljes termék a specifikáció szerinti további fázisokban készül; ez még nem telepíthető ventilátorvezérlő firmware.
+**0.2.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
-Fejlesztési ág: [`dev`](https://github.com/mszalaibme/pinceszellozteto/tree/dev). Változások: [CHANGELOG.md](CHANGELOG.md), közreműködés: [CONTRIBUTING.md](CONTRIBUTING.md). A GitHub Actions a core buildjét és tesztjeit Windows és Linux környezetben ellenőrzi.
+A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
-**0.1.1 rendszer-validáció:** 20 000 randomállapot, automatizált biztonsági regressziók és javított nedveslevegő-védelem. Eredmények és fennmaradó korlátok: [system_validation.md](docs/system_validation.md).
+## Windows: azonnal kipróbálható
 
-**0.1.2 modell:** a pince vízgőztömegét integráló, kondenzátumot is elszámoló PC könyvtár elkészült. Az RH levezetett érték. [Modell és egyenletek](docs/moisture_model.md). Helyi eredmény: 5/5 tesztprogram, 50 427 ellenőrzés.
+A GitHub Actions sikeres futásából letölthető a **pinceszellozteto-windows-x64** artifact. Kicsomagolás után **START.cmd** futtatása indítja a 12 forgatókönyvet és megnyitja az offline grafikus riportot. Az artifact az EXE-t, előállított CSV-ket, a riportot és az indítási útmutatót is tartalmazza. Az aktuális feladat átadási ZIP-je ugyanezt a hordozható csomagot adja.
 
-```sh
-git clone --branch dev https://github.com/mszalaibme/pinceszellozteto.git
-cd pinceszellozteto
+Nincs szükség ESP32-re, LVGL-re, 230 V-ra, Pythonra vagy telepítésre. A böngészőben forgatókönyv-választó, időcsúszka, visszajátszás, nyolc grafikon és állapotnézet érhető el. A böngésző már kiszámolt adatokat mutat; új paraméterekkel az EXE számol újra.
+
+```powershell
+.\pinceszellozteto.exe --list
+.\pinceszellozteto.exe --scenario all --hours 24 --step 60 --out simulation-output
+.\pinceszellozteto.exe --scenario winter --source 208.333333 --out terheles
 ```
 
-## Fordítás és tesztek
+[Windows gyorsindító](docs/windows_quickstart.md) · [Szimuláció és forgatókönyvek](docs/simulation.md) · [Vezérlés](docs/control_algorithm.md) · [Páramentesítő](docs/dehumidifier.md)
 
-Előfeltétel: CMake >=3.16 és C++17 fordító (MSVC, GCC vagy Clang).
+## Mi készült el?
 
-```sh
-cmake -S . -B build
-cmake --build build --config Debug
-ctest --test-dir build -C Debug --output-on-failure -V
-```
+- AUTO / MANUAL_OFF / MANUAL_VENTILATION / MANUAL_DEHUMIDIFIER; AUTO-ban kizárt az egyidejű működés.
+- Cél+RH-hiszterézis indítás, cél-RH leállási igény, AH hiszterézis, tényleges szárítási irányt ellenőrző vízgőznyomás-védelem.
+- Külön minimum BE/KI idők; kompresszor-késleltetés boot és manuális kérés után is.
+- Szenzorhibánál mindkét AUTO kimenet KI; kézi kimenet szenzorfigyelmeztetéssel lehetséges.
+- Restart capability, command/feedback megkülönböztetés, no-power grace, készülékhiba, hatástalansági warning, opcionális ESTIMATED tartály.
+- Víztömegmérleg, falforrás, analitikus légcsere, egyszerű termikus modell, T/RH-függő készülékkivonás, tényleges tartálytelítettség és ürítés.
+- Mind a 12 előírt forgatókönyv, CSV és offline HTML grafikonok; opcionális matplotlib tool.
+- Automatizált Windows Release build és tesztek, Unicode fájlút és dashboard-logika ellenőrzés.
 
-Windows alatt Visual Studio C++ workload szükséges. A `tools/build_test.py` ugyanazt futtatja, és normalizálja a Windows környezeti változók neveit, ha a szülőfolyamat egyszerre adott át `Path` és `PATH` változót:
+A régi `VentilationController` a történeti regressziókhoz megmaradt. Új integrációhoz kizárólag `DryingController` használandó. A konfigurációs mezők új nevei az aktuális specifikációt követik; lásd [tervezési döntések](docs/design_decisions_v2.md).
 
-```sh
-python tools/build_test.py --cmake "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe"
-```
-
-Opcionális PlatformIO native build: `pio run -e native` (host GCC kell). A PlatformIO build ebben a kiadásban nem volt futtatva; a hitelesített build CMake/MSVC.
-
-## Architektúra
-
-`core/`: tiszta standard C++, mérési adatok, képletek, konfiguráció, állapotgép. `hal/`: csak interfészek. `firmware/`: későbbi Arduino adapterek. `simulator/`: későbbi PC modell. `test/`: valódi core kód ellen futó önálló CTest programok. `src/`: PlatformIO native smoke belépőpont. `include/board_config.h`: ellenőrizetlen hardveradatok elkülönítése.
-
-Az első feladatnak megfelelően a fázisok elkülönülnek:
+## Készültség az új fázisok szerint
 
 | Fázis | Állapot |
 |---|---|
-| 1: skeleton, core típusok, pszichrometria, unit tesztek | Kész, 48 ellenőrzés |
-| 2: állapotgép, időzítők, hiszterézis, unit tesztek | Kész, 40 ellenőrzés |
-| 3: PC tömegmérlegmodell, hét forgatókönyv, CSV, plot | Tömegmérlegmodell kész; CLI/forgatókönyvek/CSV/plot még hátra |
-| 4: ESP32, SHT31, relé adapterek | Későbbi fázis |
-| 5: LVGL kijelző, grafikon | Későbbi fázis |
-| 6: NVS és konfiguráció-visszaállítás | Későbbi fázis |
-| 7: Wi-Fi, web UI, REST | Későbbi fázis |
-| 8: teljes rendszer integráció és dokumentáció | Későbbi fázis |
+| 1: típusok, pszichrometria, konfiguráció, tesztek | Kész |
+| 2: DryingController és két fogyasztó kiválasztása | Kész, tesztelt |
+| 3: készülék-, tartály-, feedbackmodell, kompresszorvédelem | Kész, tesztelt |
+| 4: teljes PC-futtató, 12 forgatókönyv, CSV, grafikon | Kész, Windows-csomag |
+| 5: ESP32 szenzor/relé/monitor adapterek | Interfészek kész; hardverimplementáció hátra |
+| 6: LVGL kijelző | Hátra |
+| 7: NVS és settings | Hátra |
+| 8: Wi-Fi, REST, firmware web UI | Hátra |
+| 9: teljes hardveres validáció | Hátra; core-regressziók már futnak |
 
-A konfiguráció most memóriában módosítható és validált; NVS, reboot-restore teszt, érintőszerkesztő és hálózat még nincs. A core invalid konstruktorparaméter esetén biztonságos alapkonfigurációra áll; futás közben invalid módosítást visszautasít. A mód induláskor AUTO, ventilátor KI.
+Az offline szimulációs HTML nem a firmware REST/web UI-ja. A PC idősortárolás nem helyettesíti a későbbi 24 órás firmware RAM ring buffert. Valós NVS/config restore, boot GPIO és 230 V üzem nincs kész vagy hitelesítve.
 
-**NEEDS HARDWARE VERIFICATION**: board revision, összes TFT/touch/SD/backlight/I2C pin, szabad GPIO, relépolaritás. Nincs kitalált GPIO és nincs engedélyezett hardverkimenet. Lásd [hardware.md](docs/hardware.md), [safety.md](docs/safety.md), [control_algorithm.md](docs/control_algorithm.md) és [validation.md](docs/validation.md).
+## Forrásból fordítás
+
+Windows 10/11 x64, Visual Studio 2022 C++ workload és CMake >=3.16:
+
+```powershell
+git clone --branch dev https://github.com/mszalaibme/pinceszellozteto.git
+cd pinceszellozteto
+cmake -S . -B build -A x64
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure -V
+.\build\Release\pinceszellozteto.exe --scenario all --out simulation-output
+```
+
+A `tools/build_test.py --config Release --cmake ABSZOLUT_CMAKE_UT` ugyanígy fordít és tesztel, Windows Path/PATH környezeti ütközést is kezel. A PlatformIO native környezet smoke buildhez áll rendelkezésre, nem ellenőrizetlen ESP32 board targetként.
+
+## Dokumentáció és biztonság
+
+[Architektúra](docs/architecture.md) · [Tömegmérleg](docs/moisture_model.md) · [Hardver](docs/hardware.md) · [Biztonság](docs/safety.md) · [Validálás](docs/validation.md) · [CHANGELOG](CHANGELOG.md)
+
+**NEEDS HARDWARE VERIFICATION:** board revision, TFT/touch/SD/backlight/I2C, szabad GPIO, mindkét relépolaritás, monitor. **NEEDS ELECTRICAL DESIGN / VERIFICATION:** kompresszorhoz alkalmas hálózati kapcsolás/kontaktor. A restart capability alapból false; csak a konkrét készüléken ellenőrzött képesség engedélyezhető.
+
+A modellek nem garantálják a valódi pince felületeinek kondenzációmentességét vagy a két mérés közötti túlhűlés kizárását. [Korábbi rendszer-validáció és korlátok](docs/system_validation.md).

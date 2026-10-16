@@ -1,5 +1,7 @@
 # Feszültségtartományok és fail-safe
 
+**Páramentesítő kiegészítés — NEEDS ELECTRICAL DESIGN / VERIFICATION.** Kompresszoros fogyasztóhoz megfelelően méretezett kapcsolóelem/kontaktor és független elektromos terv szükséges. A kis relémodul alkalmasságát nem feltételezzük. A monitor galvanikus leválasztása és a készülék restart-képessége külön ellenőrizendő. A szoftveres minimum KI idő nem helyettesíti a készülék saját védelmét. Mindkét fogyasztónak külön hardveres default OFF kell.
+
 LOW VOLTAGE: ESP32, TFT/touch, I2C szenzorok, relévezérlés. MAINS: reléérintkezők és 230 V ventilátor. Fejlesztés és teszt csak kisfeszültségen, szimulált terheléssel történjen. A hálózati kivitelezést megfelelően képzett szakember végezze a helyi követelmények szerint; ez nem bekötési terv.
 
 A fanRequested=false szoftveres alapállapot nem garantál boot alatti kikapcsolást. Megfelelő hardveres OFF irányú fel-/lehúzás, nem behúzott relével nyitott ventilátoráramkör, megfelelő tápegység, motoros terhelésre minősített kapcsolóelem, burkolat és feszültségelválasztás szükséges. Active LOW modul tápfeszültsége és bemenete külön vizsgálandó; a 3.3 V logikai jel nem jelent automatikus kompatibilitást.

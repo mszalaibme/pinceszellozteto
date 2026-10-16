@@ -9,7 +9,7 @@ int main() { return run([] {
     CHECK(c.update({25,100,300000,true},{5,90,300000,true},300000).fanRequested);
     CHECK(!c.update({25,100,300001,true},{38,48,300001,true},300001).fanRequested);
     // R2: user-adjustable thresholds also expose the defect at startup.
-    Configuration cfg; cfg.minHumidityAdvantage=0.1; cfg.stopHumidityAdvantage=0.01;
+    Configuration cfg; cfg.minVentilationHumidityAdvantage=0.1; cfg.stopVentilationHumidityAdvantage=0.01;
     VentilationController startup(cfg);
     startup.update({25,100,0,true},{38,48,0,true},0);
     CHECK(!startup.update({25,100,300000,true},{38,48,300000,true},300000).fanRequested);
@@ -55,7 +55,7 @@ int main() { return run([] {
     CHECK(huge.update({20,90,max,true},{5,70,max,true},max).fanRequested);
     CHECK(huge.update({20,90,0,true},{5,70,0,true},0).state==ControllerState::ClockError);
     // Reconstructed core: mode/fan reset; supplied validated config retained.
-    cfg.targetBasementRH=70; cfg.minimumOffTime=600000;
+    cfg.targetBasementRH=70; cfg.ventilationMinimumOffTime=600000;
     VentilationController reboot(cfg);
     CHECK(reboot.mode()==Mode::Auto && reboot.configuration().targetBasementRH==70);
     CHECK(!reboot.update({20,90,0,true},{5,70,0,true},0).fanRequested);

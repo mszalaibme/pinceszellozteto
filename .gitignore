@@ -2,3 +2,7 @@ build/
 .pio/
 __pycache__/
 *.csv
+simulation-output/
+package/
+dist/
+*.png

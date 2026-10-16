@@ -20,7 +20,7 @@ int main(int argc, char** argv) { return run([&] {
     for (int i=0;i<cases;++i) {
         const double bt=sample(5,25), brh=sample(40,100), ot=sample(-15,38), orh=sample(20,100);
         Configuration cfg;
-        if (i>=cases/2) { cfg.minHumidityAdvantage=0.1; cfg.stopHumidityAdvantage=0.01; }
+        if (i>=cases/2) { cfg.minVentilationHumidityAdvantage=0.1; cfg.stopVentilationHumidityAdvantage=0.01; }
         VentilationController start(cfg), running(cfg);
         ClimateReading b{bt,brh,0,true}, o{ot,orh,0,true};
         start.update(b,o,0);

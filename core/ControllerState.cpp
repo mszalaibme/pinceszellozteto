@@ -12,6 +12,13 @@ const char* stateName(ControllerState s) {
     case ControllerState::ManualOn: return "MANUAL_ON";
     case ControllerState::ManualOff: return "MANUAL_OFF";
     case ControllerState::ClockError: return "CLOCK_ERROR";
+    case ControllerState::Idle: return "IDLE";
+    case ControllerState::Ventilating: return "VENTILATING";
+    case ControllerState::Dehumidifying: return "DEHUMIDIFYING";
+    case ControllerState::ManualVentilation: return "MANUAL_VENTILATION";
+    case ControllerState::ManualDehumidifier: return "MANUAL_DEHUMIDIFIER";
+    case ControllerState::DehumidifierError: return "DEHUMIDIFIER_ERROR";
+    case ControllerState::WaitingMinimumOffTime: return "WAITING_MINIMUM_OFF_TIME";
     }
     return "UNKNOWN";
 }

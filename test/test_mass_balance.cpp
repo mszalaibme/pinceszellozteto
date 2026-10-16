@@ -6,7 +6,7 @@ using namespace ventilation;
 using namespace ventilation::simulation;
 void conserved(const BasementModel& m) {
     const auto& b=m.balance();
-    NEAR(m.vaporMassGram()+b.outgoingGram+b.condensedGram,
+    NEAR(m.vaporMassGram()+b.outgoingGram+b.condensedGram+b.extractedGram,
         b.initialVaporGram+b.generatedGram+b.incomingGram,1e-7);
     CHECK(m.vaporMassGram()>=0 && m.relativeHumidity()>=0 && m.relativeHumidity()<=100);
 }

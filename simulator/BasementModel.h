@@ -12,6 +12,7 @@ struct WaterBalance {
     double incomingGram = 0;
     double outgoingGram = 0;
     double condensedGram = 0; // Permanently removed; no re-evaporation model.
+    double extractedGram = 0; // Actual dehumidifier removal into its tank.
 };
 class BasementModel {
 public:
@@ -19,6 +20,9 @@ public:
     // Temperature is a prescribed boundary condition, not an RH interpolation.
     void setTemperatureC(double temperatureC);
     void step(const ClimateReading& outside, bool fanOn, double durationSeconds);
+    double removeWaterGram(double requestedGram);
+    void evolveTemperature(const ClimateReading& outside, bool fanOn, double electricalHeatWatts,
+        double seconds, double wallTemperatureC, double heatCapacityJPerK=3000000, double wallConductanceWPerK=35);
     double temperatureC() const { return temperatureC_; }
     double vaporMassGram() const { return vaporMassGram_; }
     double absoluteHumidityGm3() const { return vaporMassGram_ / parameters_.volumeM3; }

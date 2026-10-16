@@ -1,33 +1,31 @@
-# Képletek és állapotgép
+# DryingController — aktuális vezérlés
 
-Magnus-forma víz feletti telítésre, T Celsiusban, e hPa-ban:
+A pszichrometria változatlan Magnus-képleteken alapul: es=6.112 exp(17.62T/(243.12+T)), e=es*RH/100, AH=216.7e/(273.15+T). A harmatpont a Magnus inverze. Támogatott T -20…50°C, RH 0…100%; nulla RH-nál nincs véges DP. Forrás és a fizikai korlátok a system_validation.md és moisture_model.md dokumentumokban.
 
-```
-es = 6.112 * exp(17.62*T/(243.12+T))
-e = es * RH/100
-AH = 216.7 * e/(273.15+T)                 [g/m³]
-gamma = ln(RH/100) + 17.62*T/(243.12+T)
-DP = 243.12*gamma/(17.62-gamma)           [°C]
-```
+## AUTO
 
-A Magnus-harmatpont forrása: [Vaisala AWS810, WMO Annex 4.B](https://docs.vaisala.com/r/M212417EN-N/en-US/GUID-EBE2B115-3C98-4C8C-9F2D-A2FF1EFECFCC?contentId=bajgOz~ciE0m8DkMGKkkHA). A sűrűség az ideális gáz törvényéből ered: vízgőz R≈461.5 J/(kg K), hPa→Pa és kg→g átváltással 216.7-es faktor. A nyomási enhancement factor nincs modellezve. Támogatott bemenet -20…50 °C, 0…100% RH, vízhez viszonyított RH; nulla alatt nem jégre vonatkozó dérpontot adunk.
+A szárítási igény RH >= target+rhStartHysteresis esetén kapcsol be; RH <= target esetén kapcsol ki. A köztes sáv megtartja az igényállapotot. Alapérték: 68% indulás, 65% leállási igény.
 
-Ez közelítő modell normál légköri nyomásra. Mérnöki célpontként körülbelül 0.5 °C DP és 1% AH képlethibával érdemes számolni a szokásos nem extrém száraz pincei tartományban; ez nem teljes tartományra hitelesített garancia, és nem tartalmazza a szenzorhibát. A tesztek képletpontokat és invariánsokat ellenőriznek, nem laboratóriumi kalibrációt. 0% RH esetén AH=0, a DP üres optional. Hibás bemenet: calculate üres optional, skalárfüggvények NaN, DP üres optional. JSON adapter majd null-ként adja vissza a nem definiált adatot.
+Érvényes/friss pincei ÉS kültéri mérés szükséges mindkét automatikus fogyasztóhoz. Valid=false, NaN, infinity, tartományhiba, jövőidejű vagy legalább 120 s korú adat: mindkét AUTO kimenet KI, SENSOR_ERROR. Visszafelé lépő óra: CLOCK_ERROR, mindkettő KI, időzítők újraindítása.
 
-## Döntési sorrend
+Szellőztetés akkor alkalmas, ha pince T > minimum, a kültéri gőznyomás szigorúan kisebb, és ΔAH legalább a bekapcsolási küszöb. Már járó ventilátornál a kisebb leállási küszöb érvényes. A hőmérséklet- és gőznyomás-védelem mindig szükséges, nem csak induláskor.
 
-1. Visszafelé mozduló monoton idő: CLOCK_ERROR, ventilátor KI, időzítő újraindul.
-2. Manuális KI: azonnali KI. Manuális BE: folyamatos BE, automatikus klímavédelmek megkerülve, szenzorhiba esetén figyelmeztetés.
-3. AUTO: bármely hibás, jövőidejű vagy legalább sensorTimeout korú mérés esetén SENSOR_ERROR és azonnali KI.
-4. T <= minimum: azonnali KI.
-5. Kültéri vízgőznyomás >= pincei vízgőznyomás, vagy ΔAH <= stopHumidityAdvantage: azonnali KI, minimum ON felülírva. A vízgőznyomás-feltétel a 0.1.1 fizikai hibajavítása: alacsonyabb nyers g/m³ önmagában nem elég a szárításhoz.
-6. Ha már BE: RH <= cél−rhHysteresis esetén minimum ON letelte után KI; addig MinimumOnTimer. Egyébként Drying, a két AH küszöb között is.
-7. Ha KI: csak RH > cél, ΔAH >= indulási küszöb, megfelelő hőmérséklet és minimum OFF letelte esetén BE.
+Ha szárítás kell és a szellőztetés alkalmas, ventilátor az elsődleges. Ha nem alkalmas (a hideg pince is ide tartozik), a páramentesítő az elsődleges, ha a restart capability ellenőrzött. Az elégtelen falnedvesség-kezelési teljesítmény vagy a készülék alacsony hőmérsékleten romló hatásfoka külön figyelmeztetéshez vezethet; nem találunk ki gyártói működési tartományt.
 
-RH leállási alapérték 62%, újraindulás >65%. A 10 perc minimum BE csak a normál RH-cél elérés miatti leállást késlelteti. A nedvesebb levegő befúvását és túlzott hűtést nem tartja fenn. Minden valódi relékérés-változás újraindítja a megfelelő időzítőt; ugyanazon állapot ismételt kiértékelése nem. Induláskor az első update idejétől kivárjuk az 5 perc minimum KI időt. Módváltás a következő update-ben hatályos; manuális mód nem várja meg az időzítőket.
+Már járó eszköznél normál cél-elérés/stratégiaváltás megvárja a minimum BE időt: ventilátor 10 perc, páramentesítő 15 perc. Ventilátor hideg/nem szárító levegő esetén azonnal KI. Szenzorhiba, explicit készülékfault és kézi OFF azonnali leállást ad. AUTO-ban a két kimenet soha nem igaz egyszerre. Ha az elsődleges eszköz minimum KI idejére várunk, mindkét kimenet KI; nem indítjuk el kerülő úton a másik eszközt.
 
-Emergency RH nem jogosít fel vak szellőztetésre. Külön highHumidityWarning jelző működik az állapot mellett. Túl nedves kültérnél explicit üzenet; KI mellett dehumidificationSuggested. A relé meghibásodását a szoftveres fanRequested nem tudja bizonyítani.
+Külön minimum KI idők: ventilátor 5 perc, páramentesítő 10 perc. Bootkor az első update-től számítjuk a teljes várakozást. A hibából visszatérés sem kerüli meg a valódi utolsó kimenetváltás idejét. Az időszámítás kivonásos, 64 bites, a jövőidejű mérés és visszalépés ellen védett.
 
-## Fizikai korlát
+## Páramentesítő diagnózis
 
-A specifikáció szerinti g/m³ különbség hőmérsékletfüggő; felmelegítéskor ugyanazon kültéri levegő térfogata változik. A 0.1.1 megtartja az AH küszöböket, és további szükséges feltételként kisebb kültéri vízgőznyomást követel meg. Közel azonos össznyomásnál ez kisebb keverési arányt is jelent. A falhőmérséklet, felületi kondenzáció és tényleges páramentesítési teljesítmény továbbra sem következik önmagában a léghőmérsékletből. Részletes korlátok a system_validation.md fájlban.
+A restart capability alapból false. Nem állítjuk, hogy egy konnektorbekapcsolás képes elindítani az ismeretlen készüléket. Unknown/stale monitor esetén feedbackUnavailable figyelmeztetés keletkezik. Hiteles Off/NoPowerDraw vagy konfigurált minimum alatti fogyasztás 2 perc startup grace után DEHUMIDIFIER_ERROR/NO_POWER_DRAW. Egy korábban már futó gép leállását a folyamatos hiány első észlelésétől számított grace után jelezzük.
+
+NO_POWER_DRAW esetén a konnektor BE maradhat, így helyi tankürítés után képes helyreállni. Fault esetén a konnektor KI. Nem állítunk biztos TANK_FULL diagnózist dedikált szint-visszajelzés nélkül. Running feedback helyreállásakor a no-power diagnózis megszűnik.
+
+A performance monitor folyamatosan visszajelzett működés alatt 3 órás ablak AH-javulását vizsgálja (alap 0.2 g/m³). A sikertelen javulás warning, nem leállítás. A tank estimate opcionális, nem biztonsági szabály; resetje csak a becslést nullázza.
+
+## Manuális módok
+
+MANUAL_OFF mindent kikapcsol. MANUAL_VENTILATION megkerüli az automatikus klímavédelmeket, szenzorfigyelmeztetés megmarad. MANUAL_DEHUMIDIFIER a klímavédelmeket megkerüli, de a kompresszor minimum KI, a restart capability és az explicit készülékfault továbbra is érvényes. BOTH mód ebben a kiadásban nincs.
+
+A visszatérő ControllerOutput külön tartalmazza a parancsokat, állapotot, ReasonCode-ot, szenzor/feedback/hatástalansági figyelmeztetéseket és az opcionális tankbecslést. Ezek parancsok és diagnózisok; a fizikai eszköz működése csak monitorral állapítható meg.

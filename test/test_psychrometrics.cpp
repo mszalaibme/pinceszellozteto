@@ -32,7 +32,7 @@ int main() { return run([] {
     CHECK(!r.isFresh(120100, 120000)); CHECK(!r.isFresh(99, 120000));
     r.valid = false; CHECK(!r.isFresh(100, 120000));
     Configuration c; CHECK(c.isValid());
-    c.stopHumidityAdvantage = 1; CHECK(!c.isValid());
+    c.stopVentilationHumidityAdvantage = 1; CHECK(!c.isValid());
     c = {}; c.emergencyRH = 60; CHECK(!c.isValid());
     c = {}; c.targetBasementRH = NAN; CHECK(!c.isValid());
     c = {}; c.sensorTimeout = 0; CHECK(!c.isValid());

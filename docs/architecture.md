@@ -1,11 +1,15 @@
-# Végleges rétegezés
+# Architektúra — v2 specifikáció
 
-Adatút: ISensor → ClimateReading → VentilationController → ControllerOutput → IRelay. Az IClock monoton, 64 bites milliszekundumot szolgáltat. Az UI és HTTP ugyanazt a konfigurációvalidálást és módváltást használja majd; a core sem relét, sem hálózatot, sem LVGL-t nem ismer.
+A core kizárólag C++17 standard típusokat használ. Az adatút: ISensor + IDehumidifierMonitor + IClock → DryingController → két logikai kimenet → két külön IRelay/kontaktor adapter. A controller nem tud GPIO-ról, LVGL-ről, Wi-Fi-ről, készülékmodellről vagy 230 V-ról.
 
-Az IStorage a verziózott Configuration betöltésének/mentésének határa. A későbbi NVS adapter mezőnként szerializáljon, ne nyers C++ struktúramemóriát írjon; ellenőrizze a verziót, teljes rekordot és isValid()-ot. Mentés csak kifejezett felhasználói kérésre. A HAL nem tartalmaz implementációt a mostani két fázisban.
+A Configuration egyetlen validált paraméterobjektum. Az új mezők nevei a v2 specifikációt követik. A mode és a konfiguráció az UI/HTTP felől ugyanazon core metódusokon keresztül változik. A későbbi firmware egyetlen vezérlőciklusban kezeli a méréseket és kimeneteket; UI/HTTP nem írhat közvetlenül relét.
 
-A CMake a core és host tesztek elsődleges buildje. PlatformIO külön native környezetet kapott; az ESP32 target csak a hardverellenőrzés és a 4. fázis után kerül be, így nem sugallunk hamis készültséget egy általános ESP32 boardazonosítóval. C++17 a kompatibilis közös nyelvi szint. A test/ név a PlatformIO konvencióját követi.
+A `DehumidifierReading` a típusos feedback mellett opcionális teljesítményt és timestampet ad. A fizikai tartályszint nem része a controller bemenetének. Így a szimulátor valóban csak a monitorból felismerhető NO_POWER_DRAW állapotot diagnosztizálhatja, nem olvassa titokban a virtuális tankFull flaget.
 
-Később egyetlen firmware ciklus olvassa a szenzorokat, értékeli a core-t és írja a relét; a kijelző és HTTP csak parancsokat ad át. A szenzorhibás mintát nem szabad új timestamp-pel friss sikeres mérésnek feltüntetni. A millis() 32 bites átfordulását a HAL-nak kell 64 bitre bővítenie, vagy ESP monotonic 64 bites időforrást használni.
+A simulator könyvtár tartalmazza a BasementModel, DehumidifierModel és SimulationRunner osztályokat. A szellőztetés tömegmérlege a BasementModel része, a kültéri profil a SimulationRunner forgatókönyvi határfeltétele: ezért nincs üres VentilationModel/OutdoorModel wrapper. A `scenarios()` a 12 explicit forgatókönyv egyetlen definíciója; a tesztek és CLI ugyanazt használják. A CLI CSV-t és beágyazott adatokkal önálló HTML-riportot készít.
 
-A 24 órás történet RAM ring buffer lesz 1440 percenkénti rekorddal; hibás mintákat külön érvényesség jelöl. A páramentesítő később önálló actuator policy-t kap; a jelenlegi dehumidificationSuggested kizárólag javaslat, nem elektromos kimenet.
+A korábbi VentilationController a validáció történeti regresszióihoz maradt meg. Az új termékkód a DryingController-t használja; a régi RH-szabályt nem vegyítjük az új runtime viselkedéssel.
+
+A HAL interfészek firmware adapterei, az NVS, LVGL, REST és RAM history a következő fázisok. Az NVS majd mezőnként, verziózott rekordként tároljon, ne nyers struktúramemóriát írjon. Sérült/hiányos konfiguráció esetén ellenőrzött default és mindkét kimenet KI. A 32 bites millis átfordulását a HAL-nak kell bővítenie; az időforrás 64 bites monoton milliszekundum.
+
+A natív CMake build készíti a core-t, szimulációt, EXE-t és teszteket. A Windows-csomag statikus MSVC runtime-ot használ. A CI Windows Release környezetben fut és kész csomagot ad artifactként.
