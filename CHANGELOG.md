@@ -2,6 +2,13 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.7.0] - 2026-10-16
+
+- Központi hardvercél ESP32-2432S028R-CYD: 2,8 hüvelyk, 240×320, ILI9341, rezisztív érintés. Külön OLED és két fizikai kezelőgomb elhagyva; a pincei kijelző nélküli ESP32-C3/RS485 marad.
+- Windows alkalmazás alapból az érintős nézetet mutatja, helyes 3:4 képaránnyal; a PNG 240×320. A tartályoldal közvetlen úszójelet mutat, és az érintés nem ürítheti a fizikai tartályt; erre új hitbox-regresszió készült.
+- HESTORE kosár 50 225 Ft bruttó, két SHT30-M-mel a tető alatti kültéri méréshez is. Az összeszerelés még nem forrasztásmentes; GPIO/ADC/csatlakozó és hálózati validáció szükséges.
+- Mind a 20 CTest-csoport sikeres. Az OLED kétgombos kód történeti tesztként megmarad.
+
 ## [0.6.0] - 2026-10-16
 
 - Alapértelmezett 128×64 SH1106 OLED-előnézet két fizikai gombbal, hat oldallal, mentés előtti mód/cél/minimum-hőmérséklet szerkesztéssel. A régi érintős nézet külön próbapadi opció.

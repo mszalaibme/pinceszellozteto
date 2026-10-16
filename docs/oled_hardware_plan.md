@@ -1,3 +1,5 @@
+> Történeti 0.6 OLED-változat. Aktuális terv: [CYD 2,8 hüvelyk](cyd28_hardware_plan.md).
+
 # OLED, két gomb, távoli pincei mérés és úszókapcsoló
 
 A 0.6 változat a 3,5 hüvelykes érintőpanel helyett külön ESP32-C3 és 1,3 hüvelykes SH1106 OLED mellett készül. A Windows program az ennek megfelelő hatoldalas kijelzőt és két gombot mutatja. A vezérlő önállóan dolgozik; beállítást csak szükség esetén módosítunk.

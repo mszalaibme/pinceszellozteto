@@ -21,7 +21,7 @@ constexpr COLORREF lcd=RGB(13,30,29),card=RGB(24,45,42),white=RGB(232,243,232),g
 DisplaySession session;
 Configuration draft;
 OledUi oled;
-bool legacyScreen=false;
+bool legacyScreen=true;
 HWND monitorCheck=nullptr;
 int page=0,settingsPage=0;
 bool playing=false;
@@ -32,7 +32,7 @@ HFONT controlFont=nullptr;
 std::vector<std::wstring> events;
 std::wstring notice=L"A szimuláció szünetel. Indítsd az időt, vagy használd a +perc gombokat.";
 std::string lastReason;
-constexpr int sx=42,sy=120,sw=400,sh=600;
+constexpr int sx=42,sy=120,sw=400,sh=533;
 
 std::wstring number(double n,int precision=1) {
     if(!std::isfinite(n)) return L"—";
@@ -165,9 +165,10 @@ void drawTouchScreen(HDC dc) {
         row(153,L"Készülék működése",status.dehumidifier,status.dehumidifierConfirmedRunning?green:amber);
         row(195,L"Mért teljesítmény",number(f.powerWatts,0)+L" W",white);
         row(237,L"Parancs üzemideje",clockText(out.dehumidifierRuntimeSeconds),white);
-        row(279,L"Becsült tartály",out.tankEstimateAvailable?number(out.estimatedTankLevelLiters,2)+L" / "+number(session.configuration().tankCapacityLiters)+L" L":L"ISMERETLEN",white);
-        text(dc,17,314,288,26,L"Csak becslés, nem tartályérzékelő.",10,amber);
-        button(dc,14,347,292,37,L"TARTÁLY ÜRÍTVE");
+        const auto tank=session.tankReading();
+        row(279,L"Tartály úszójele",!tank.valid?L"HIBÁS":tank.full?L"MEGTELT":L"NEM TELE",tank.full||!tank.valid?amber:green);
+        text(dc,17,314,288,26,L"Egyszintű jelzés; nem mér százalékot.",10,amber);
+        text(dc,17,347,286,34,L"Ürítsd ki a fizikai tartályt.\nAz úszójelet a kijelző nem törli.",11,muted);
         button(dc,14,391,292,29,L"MŰSZAKI ADATOK ›");
     } else if(page==2) {
         for(int row=0;row<6;++row) {
@@ -224,12 +225,12 @@ void drawScreen(HDC dc) {
 void draw(HDC dc) {
     fill(dc,0,0,1100,820,paper);
     text(dc,38,24,700,30,L"Pince Lab",26,ink,true);
-    text(dc,39,61,900,30,L"Próbáld ki a kis OLED kijelzőt és a két fizikai gombot.",15,muted);
-    fill(dc,28,104,428,632,RGB(33,49,45),25);
+    text(dc,39,61,900,30,L"2,8 hüvelykes érintőkijelző · válassz módot közvetlenül a képernyőn.",15,muted);
+    fill(dc,28,104,428,565,RGB(33,49,45),25);
     const int saved=SaveDC(dc);
     SetMapMode(dc,MM_ANISOTROPIC);SetWindowExtEx(dc,320,480,nullptr);SetViewportExtEx(dc,sw,sh,nullptr);SetViewportOrgEx(dc,sx,sy,nullptr);
     drawScreen(dc);RestoreDC(dc,saved);
-    text(dc,45,748,405,38,L"OLED: 128 × 64 · nagyított előnézet\nValódi C++ vezérlés és vízgőztömeg-modell.",12,muted);
+    text(dc,45,685,405,60,L"ESP32-2432S028R-CYD · 240 × 320\n2,8 hüvelyk · érintős kezelés\nKülön OLED és kezelőgombok nélkül.",12,muted);
     text(dc,500,108,540,25,L"PRÓBAPAD",12,ink,true);
     text(dc,500,158,500,22,L"PINCE                             KÜLTÉR",12,muted,true);
     text(dc,500,190,66,24,L"°C",13,ink);text(dc,740,190,50,24,L"°C",13,ink);
@@ -274,7 +275,7 @@ void screenClick(int x,int y) {
         const std::array<Mode,4> modes{Mode::Auto,Mode::ManualVentilation,Mode::ManualDehumidifier,Mode::Off};
         const int positions[]{10,66,158,270},widths[]{50,86,106,40};
         for(int i=0;i<4;++i) if(x>=positions[i]&&x<positions[i]+widths[i]) session.setMode(modes[static_cast<size_t>(i)]);
-    } else if(page==1 && y>=347&&y<=384) { session.emptyTank();SendMessageW(faultBox,CB_SETCURSEL,0,0);notice=L"Tartály ürítve; becslés nullázva."; }
+    }
     else if(page==1 && y>=391&&y<=420) page=4;
     else if(page==2) {
         if(y>=61&&y<343&&x>=227) { int r=(y-61)/47;settingChange(settingsPage*6+r,x<265?-1:1); }
@@ -288,8 +289,8 @@ void screenClick(int x,int y) {
     }
 }
 void renderPng(const wchar_t* path) {
-    HDC dc=CreateCompatibleDC(nullptr);BITMAPINFO info{};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);info.bmiHeader.biWidth=320;info.bmiHeader.biHeight=-480;info.bmiHeader.biPlanes=1;info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
-    void* bits=nullptr;HBITMAP bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&bits,nullptr,0);auto old=SelectObject(dc,bitmap);drawScreen(dc);
+    HDC dc=CreateCompatibleDC(nullptr);BITMAPINFO info{};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);info.bmiHeader.biWidth=240;info.bmiHeader.biHeight=-320;info.bmiHeader.biPlanes=1;info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
+    void* bits=nullptr;HBITMAP bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&bits,nullptr,0);auto old=SelectObject(dc,bitmap);SetMapMode(dc,MM_ANISOTROPIC);SetWindowExtEx(dc,320,480,nullptr);SetViewportExtEx(dc,240,320,nullptr);drawScreen(dc);
     Gdiplus::Bitmap image(bitmap,nullptr);
     CLSID png{0x557cf406,0x1a04,0x11d3,{0x9a,0x73,0x00,0x00,0xf8,0x1e,0xf3,0x2e}};
     const auto status=image.Save(path,&png,nullptr);
@@ -317,7 +318,7 @@ LRESULT CALLBACK windowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
         child(L"BUTTON",L"+1 perc",BS_PUSHBUTTON,766,418,81,32,132);child(L"BUTTON",L"+10 perc",BS_PUSHBUTTON,858,418,82,32,133);child(L"BUTTON",L"+1 óra",BS_PUSHBUTTON,950,418,80,32,134);
         child(L"BUTTON",L"Próbapadi tartály ürítése + becslés nullázása",BS_PUSHBUTTON,500,457,530,26,135);
         monitorCheck=child(L"BUTTON",L"Modell működésmérése (a kosárban nincs árammérő)",BS_AUTOCHECKBOX,500,690,530,25,140);
-        child(L"BUTTON",L"Korábbi érintős műszaki nézet",BS_AUTOCHECKBOX,45,69,410,26,141);
+
         SetTimer(hwnd,1,1000,nullptr);draft=session.configuration();record();return 0;
     }
     case WM_PAINT: {
@@ -368,6 +369,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
         screenClick(275,362);ok=ok&&settingsPage==1;
         screenClick(40,454);ok=ok&&page==0;
         screenClick(40,400);ok=ok&&session.mode()==Mode::Auto;
+        session.preset(5);page=1;screenClick(100,360);ok=ok&&session.tankReading().full&&!session.output().dehumidifierRequested;
         legacyScreen=false;oled=OledUi{};
         screenClick(100,150);ok=ok&&oled.page()==0; // Display is not a touch input.
         for(int i=0;i<3;++i)screenClick(60,330);
@@ -377,7 +379,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return ok?0:1;
     }
     if(argc>=3 && std::wstring(argv[1])==L"--render") {
-        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) {unsigned target=static_cast<unsigned>(std::clamp(std::stoi(argv[4]),0,5));for(unsigned i=0;i<target;++i)oled.next(session);}if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
+        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) page=std::clamp(std::stoi(argv[4]),0,4);if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
         catch(...) { LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 1; }
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 0;
     }
@@ -386,7 +388,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
     RECT work{};SystemParametersInfoW(SPI_GETWORKAREA,0,&work,0);
     windowScale=std::min({1.0,static_cast<double>(work.right-work.left-40)/1100,static_cast<double>(work.bottom-work.top-70)/820});
     RegisterClassW(&wc);RECT r{0,0,static_cast<LONG>(std::lround(1100*windowScale)),static_cast<LONG>(std::lround(820*windowScale))};AdjustWindowRect(&r,WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,FALSE);
-    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab 0.6 · OLED, két gomb és úszókapcsoló",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
+    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab 0.7 · 2,8 hüvelykes ESP32 érintőkijelző",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
     if(!hwnd) { Gdiplus::GdiplusShutdown(gdip);return 1; }
     ShowWindow(hwnd,show);UpdateWindow(hwnd);
     MSG msg{};while(GetMessageW(&msg,nullptr,0,0)>0) { if(!IsDialogMessageW(hwnd,&msg)) {TranslateMessage(&msg);DispatchMessageW(&msg);} }

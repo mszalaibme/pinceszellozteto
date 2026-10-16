@@ -1,6 +1,6 @@
 # Pince-szellőztető és páramentesítő vezérlő
 
-**0.6.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
+**0.7.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
 A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
@@ -8,11 +8,11 @@ A [szimulációs kiegészítés eredményei](docs/simulation_addendum_results.md
 
 ## Interaktív kijelző Windowsra
 
-Alapból **1,3 hüvelykes, 128×64 OLED és két fizikai gomb** próbálható ki. KÖVETKEZŐ: lapozás; OK: szerkesztés/mentés. Hat oldal: klíma és kimenetek, döntés indoka, tartály/visszajelzés, üzemmód, cél-RH, minimum pincehőmérséklet. A tartály úszójele MEGTELT / NEM TELE / HIBÁS, nem fiktív százalék.
+Alapból **ESP32-2432S028R-CYD, 2,8 hüvelykes, 240×320 érintőkijelző** próbálható ki. A kijelző és a központi ESP32 egy panel; külön OLED és fizikai kezelőgomb nem kell. A második, kijelző nélküli ESP32-C3 a pincében marad: rövid helyi vezetéken olvassa az SHT30-at, majd RS485-ön küldi az adatot az 5–6 m-re lévő központnak.
 
-A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. A jobb oldali próbapadon klíma, idő, hibák, reboot és tartályürítés állítható. Az úszójel külön core bemenet: tele vagy hibás jel a minimum BE időt és a kézi páramentesítést is felülírja. A pincei RS485 adatvesztés kipróbálható. Árammérő nincs a kosárban, ezért a működés-visszajelzés alapból ismeretlen; a modellmérés külön opció. A korábbi érintős műszaki nézet jelölőnégyzettel előhívható.
+A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. Az egér az érintést helyettesíti: FŐOLDAL, KÉSZÜLÉK, BEÁLLÍTÁS, ELŐZMÉNY; AUTO, kézi ventilátor, kézi páramentesítő, KI. A tartály MEGTELT / NEM TELE / HIBÁS jele nem százalékmérés. Fizikai tele jelet a kijelző nem törölhet; a jobb oldali próbapad ürítőgombja csak a virtuális készüléket üríti. A táp BE nem bizonyítja a kompresszor működését.
 
-[Kijelző használati útmutató](docs/display_simulator.md) · [OLED és távoli mérés terve](docs/oled_hardware_plan.md). A közös C++ mag fut; a valódi SH1106/GPIO/RS485 firmware-adapter és NVS még hátra van. A rögzített klíma döntési próba, a dinamikus mód víztömeg- és hőmodell.
+[Kijelző használati útmutató](docs/display_simulator.md) · [Aktuális 2,8 hüvelykes hardverterv](docs/cyd28_hardware_plan.md). A közös C++ mag fut; a fizikai firmware/adaperek, pin-ellenőrzés és NVS hátra vannak. Az integrált kijelző csökkenti az összekötéseket, de a kosár még nem teljesen forrasztásmentes készlet. A régi OLED kód történeti regresszióként marad.
 
 ## Windows batch szimuláció
 
@@ -54,7 +54,7 @@ A régi `VentilationController` a történeti regressziókhoz megmaradt. Új int
 | 3: készülék-, tartály-, feedbackmodell, kompresszorvédelem | Kész, tesztelt |
 | 4: teljes PC-futtató, 12 forgatókönyv, CSV, grafikon | Kész, Windows-csomag |
 | 5: ESP32 szenzor/relé/monitor adapterek | Interfészek kész; hardverimplementáció hátra |
-| 6: kijelző | OLED + kétgombos Windows-prototípus kész; SH1106 firmware-renderelő hátra |
+| 6: kijelző | 2,8 hüvelykes érintős Windows-prototípus kész; CYD firmware-renderelő hátra |
 | 7: NVS és settings | Hátra |
 | 8: Wi-Fi, REST, firmware web UI | Hátra |
 | 9: teljes hardveres validáció | Hátra; core-regressziók már futnak |

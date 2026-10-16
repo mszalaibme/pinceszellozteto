@@ -1,3 +1,5 @@
+> Történeti 0.6 OLED-változat. Aktuális terv: [CYD 2,8 hüvelyk](cyd28_hardware_plan.md).
+
 # OLED és úszó validáció 0.6
 
 Before fix: regression test_tank_interlock failed, old FullTank was only NoPowerDraw.

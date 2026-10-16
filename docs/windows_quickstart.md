@@ -1,6 +1,6 @@
-# Windows szimulátor 0.6.0
+# Windows szimulátor 0.7.0
 
-A **START.cmd** vagy **pince-kijelzo.exe** megnyitja az interaktív kijelzőt. Alapból a 128×64 OLED és a két fizikai gomb kattintható; a jobb oldali próbapadon klíma, hibák, időléptetés és dinamika állítható. Az idő alapból áll: **+10 perc** után már letelnek az indulási minimum KI idők. Részletek: [kijelző útmutató](docs/display_simulator.md).
+A **START.cmd** vagy **pince-kijelzo.exe** megnyitja az interaktív kijelzőt. Alapból a 2,8 hüvelykes 240×320 érintőkijelző gombjai kattinthatók; a jobb oldali próbapadon klíma, hibák, időléptetés és dinamika állítható. Az idő alapból áll: **+10 perc** után már letelnek az indulási minimum KI idők. Részletek: [kijelző útmutató](docs/display_simulator.md).
 
 Kicsomagolás után a `simulation-output/analysis.html` azonnal megnyitható: 950 elkészült futás, hat összehasonlító grafikon és eredménytábla. A `report.html` hat részletes idősor visszajátszását és tíz grafikont tartalmazza. Telepítés és Python nem szükséges.
 
