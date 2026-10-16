@@ -85,5 +85,4 @@ A modellek nem garantálják a valódi pince felületeinek kondenzációmentess�
 
 ## Beszerzési előkészítés
 
-[HESTORE alkatrészlista és nyitott hardverkérdések, 2026-10-16](docs/hestore_bom_2026-10-16.md): 24 kosártétel, a megadott érzékelő- és készüléktávolságokkal, beszerzési idő és telepítési feltételek. Előzetes kosár, nem teljes telepítési terv.
-
+[HESTORE alkatrészlista és nyitott hardverkérdések, 2026-10-16](docs/hestore_bom_2026-10-16.md): takarékos, 50 088 Ft-os kosár, rövid érzékelővezetékekhez áthelyezett vezérlővel, beszerzési idő és telepítési feltételek. Előzetes kosár, nem teljes telepítési terv.
