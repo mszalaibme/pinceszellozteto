@@ -85,4 +85,5 @@ A modellek nem garantálják a valódi pince felületeinek kondenzációmentess�
 
 ## Beszerzési előkészítés
 
-[HESTORE alkatrészlista és nyitott hardverkérdések, 2026-10-16](docs/hestore_bom_2026-10-16.md): 21 kosártétel, beszerzési idő és telepítési feltételek. Előzetes kosár, nem teljes telepítési terv.
+[HESTORE alkatrészlista és nyitott hardverkérdések, 2026-10-16](docs/hestore_bom_2026-10-16.md): 24 kosártétel, a megadott érzékelő- és készüléktávolságokkal, beszerzési idő és telepítési feltételek. Előzetes kosár, nem teljes telepítési terv.
+
