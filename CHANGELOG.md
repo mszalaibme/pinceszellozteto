@@ -2,6 +2,20 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.1.1] - 2026-10-16
+
+### Javítva
+
+- AUTO nem indulhat és nem járhat tovább, ha a kültéri vízgőznyomás eléri a pincei értéket. Az eltérő hőmérsékletű levegők nyers g/m³ összehasonlítása önmagában hibás szárítási döntést engedett.
+- A védelmi leállás a minimum BE időt is felülírja. Az AH kijelzés és konfigurált küszöbök megmaradnak.
+
+### Validálás
+
+- 20 000 determinisztikus randomállapot, induló és már járó ventilátorral, a megadott időjárási tartományokban.
+- Javítás előtt 27 nedvesítő indulás és 51 nedvesítő továbbjárás; javítás után 0 és 0 ugyanazon mintákban.
+- Regressziók: kétoldali szenzorhiba, NaN, infinity, timeout, jövőidejű minta, 32/64 bites időhatár, core újraindulás, relékapcsolási zaj és szélsőértékek.
+- A fennmaradó fizikai és hardveres korlátok: [rendszervalidáció](docs/system_validation.md).
+
 ## [0.1.0] - 2026-10-16
 
 ### Hozzáadva

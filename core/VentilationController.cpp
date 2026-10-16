@@ -34,6 +34,13 @@ ControllerOutput VentilationController::update(const ClimateReading& b, const Cl
     if (!sensorsOK) return finish(false, ControllerState::SensorError, "Sensor invalid, missing or stale");
     if (b.temperatureC <= config_.minBasementTemperature)
         return finish(false, ControllerState::BasementTooCold, "Basement too cold");
+    // At approximately equal total pressure, vapor pressure orders mixing ratio.
+    // Comparing g/m3 at different temperatures alone can admit wetter warm air.
+    // Keep the configured AH hysteresis, but never permit actual humidification.
+    if (psychrometrics::vaporPressureHpa(o.temperatureC, o.humidityRH)
+        >= psychrometrics::vaporPressureHpa(b.temperatureC, b.humidityRH))
+        return finish(false, ControllerState::OutdoorAirTooHumid, out.highHumidityWarning
+            ? "HIGH HUMIDITY - OUTDOOR AIR TOO WET" : "Outdoor vapor pressure is not lower");
     if (out.differenceGm3 <= config_.stopHumidityAdvantage)
         return finish(false, ControllerState::OutdoorAirTooHumid, out.highHumidityWarning
             ? "HIGH HUMIDITY - OUTDOOR AIR TOO WET" : "Outdoor air too humid");

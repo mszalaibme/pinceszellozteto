@@ -20,7 +20,7 @@ Ez közelítő modell normál légköri nyomásra. Mérnöki célpontként kör�
 2. Manuális KI: azonnali KI. Manuális BE: folyamatos BE, automatikus klímavédelmek megkerülve, szenzorhiba esetén figyelmeztetés.
 3. AUTO: bármely hibás, jövőidejű vagy legalább sensorTimeout korú mérés esetén SENSOR_ERROR és azonnali KI.
 4. T <= minimum: azonnali KI.
-5. ΔAH <= stopHumidityAdvantage: azonnali KI, minimum ON felülírva.
+5. Kültéri vízgőznyomás >= pincei vízgőznyomás, vagy ΔAH <= stopHumidityAdvantage: azonnali KI, minimum ON felülírva. A vízgőznyomás-feltétel a 0.1.1 fizikai hibajavítása: alacsonyabb nyers g/m³ önmagában nem elég a szárításhoz.
 6. Ha már BE: RH <= cél−rhHysteresis esetén minimum ON letelte után KI; addig MinimumOnTimer. Egyébként Drying, a két AH küszöb között is.
 7. Ha KI: csak RH > cél, ΔAH >= indulási küszöb, megfelelő hőmérséklet és minimum OFF letelte esetén BE.
 
@@ -30,4 +30,4 @@ Emergency RH nem jogosít fel vak szellőztetésre. Külön highHumidityWarning 
 
 ## Fizikai korlát
 
-A specifikáció szerinti g/m³ különbség hőmérsékletfüggő; felmelegítéskor ugyanazon kültéri levegő térfogata változik. A pontosabb jövőbeli döntéshez keverési arány/vízgőznyomás és a pincehőmérsékletre átszámolt kültéri AH használható. Itt a kért AH-algoritmus fut; falhőmérséklet, felületi kondenzáció és tényleges páramentesítési teljesítmény nem következik önmagában a léghőmérsékletből.
+A specifikáció szerinti g/m³ különbség hőmérsékletfüggő; felmelegítéskor ugyanazon kültéri levegő térfogata változik. A 0.1.1 megtartja az AH küszöböket, és további szükséges feltételként kisebb kültéri vízgőznyomást követel meg. Közel azonos össznyomásnál ez kisebb keverési arányt is jelent. A falhőmérséklet, felületi kondenzáció és tényleges páramentesítési teljesítmény továbbra sem következik önmagában a léghőmérsékletből. Részletes korlátok a system_validation.md fájlban.

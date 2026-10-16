@@ -1,5 +1,7 @@
 # Validálási jegyzőkönyv
 
+0.1.1 kiegészítés: 4/4 tesztprogram, 20 393 sikeres ellenőrzés (40 + 48 + 20 004 + 301), 20 000 randomállapottal. Fizikai hibajavítás és a javítás előtti/utáni eredmények: [system_validation.md](system_validation.md). Az alábbiak az eredeti 0.1.0 fázisnapló adatai.
+
 2026-10-16, Windows x64, CMake 3.31.6, Visual Studio 2022 / MSVC 19.44.35219.0.
 
 PHASE 1: core könyvtár és test_psychrometrics build, CTest 1/1 sikeres, 48 ellenőrzés. Csak ezután indult PHASE 2.

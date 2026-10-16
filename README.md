@@ -4,6 +4,8 @@ Buildelhető, platformfüggetlen C++17 vezérlőmag. **PHASE 1 és PHASE 2 kész
 
 Fejlesztési ág: [`dev`](https://github.com/mszalaibme/pinceszellozteto/tree/dev). Változások: [CHANGELOG.md](CHANGELOG.md), közreműködés: [CONTRIBUTING.md](CONTRIBUTING.md). A GitHub Actions a core buildjét és tesztjeit Windows és Linux környezetben ellenőrzi.
 
+**0.1.1 rendszer-validáció:** 20 000 randomállapot, automatizált biztonsági regressziók és javított nedveslevegő-védelem. Eredmények és fennmaradó korlátok: [system_validation.md](docs/system_validation.md).
+
 ```sh
 git clone --branch dev https://github.com/mszalaibme/pinceszellozteto.git
 cd pinceszellozteto
