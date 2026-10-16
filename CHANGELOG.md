@@ -2,6 +2,16 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.1.2] - 2026-10-16
+
+### Hozzáadva
+
+- PC BasementModel vízgőztömeg állapotváltozóval; az AH és RH levezetett adatok.
+- Analitikusan integrált légcsere és g/h nedvességforrás; a bejövő sűrűség pincehőmérsékletre számolva.
+- Telítési átmenet és külön kondenzátum-mérleg; explicit előírt hőmérséklet, kitalált termikus modell nélkül.
+- 30 034 új ellenőrzés, köztük 10 000 random modellállapot és zárt víztömegmérleg, valamint időlépésfüggetlenség.
+- A meglévő 20 000 állapotos vezérlővalidáció változatlanul sikeres; összesen 50 427 helyi ellenőrzés.
+
 ## [0.1.1] - 2026-10-16
 
 ### Javítva

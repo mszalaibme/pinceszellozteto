@@ -6,6 +6,8 @@ Fejlesztési ág: [`dev`](https://github.com/mszalaibme/pinceszellozteto/tree/de
 
 **0.1.1 rendszer-validáció:** 20 000 randomállapot, automatizált biztonsági regressziók és javított nedveslevegő-védelem. Eredmények és fennmaradó korlátok: [system_validation.md](docs/system_validation.md).
 
+**0.1.2 modell:** a pince vízgőztömegét integráló, kondenzátumot is elszámoló PC könyvtár elkészült. Az RH levezetett érték. [Modell és egyenletek](docs/moisture_model.md). Helyi eredmény: 5/5 tesztprogram, 50 427 ellenőrzés.
+
 ```sh
 git clone --branch dev https://github.com/mszalaibme/pinceszellozteto.git
 cd pinceszellozteto
@@ -39,7 +41,7 @@ Az első feladatnak megfelelően a fázisok elkülönülnek:
 |---|---|
 | 1: skeleton, core típusok, pszichrometria, unit tesztek | Kész, 48 ellenőrzés |
 | 2: állapotgép, időzítők, hiszterézis, unit tesztek | Kész, 40 ellenőrzés |
-| 3: PC tömegmérlegmodell, hét forgatókönyv, CSV, plot | Következő fázis |
+| 3: PC tömegmérlegmodell, hét forgatókönyv, CSV, plot | Tömegmérlegmodell kész; CLI/forgatókönyvek/CSV/plot még hátra |
 | 4: ESP32, SHT31, relé adapterek | Későbbi fázis |
 | 5: LVGL kijelző, grafikon | Későbbi fázis |
 | 6: NVS és konfiguráció-visszaállítás | Későbbi fázis |
