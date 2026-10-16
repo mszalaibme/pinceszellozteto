@@ -1,4 +1,4 @@
-# Windows szimulátor 0.4.0
+# Windows szimulátor 0.5.0
 
 A **START.cmd** vagy **pince-kijelzo.exe** megnyitja az interaktív kijelzőt. A képernyő gombjai kattinthatók; a jobb oldali próbapadon klíma, hibák, időléptetés és dinamika állítható. Az idő alapból áll: **+10 perc** után már letelnek az indulási minimum KI idők. Részletek: [kijelző útmutató](docs/display_simulator.md).
 

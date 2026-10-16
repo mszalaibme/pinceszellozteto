@@ -27,7 +27,7 @@ int execute(const std::vector<std::string>& args) {
         for(std::size_t i=1;i<args.size();++i) {
             const auto& a=args[i];
             if(a=="--help" || a=="-h") {
-                std::cout<<"Pince simulator 0.4.0 (no hardware required)\n"
+                std::cout<<"Pince simulator 0.5.0 (no hardware required)\n"
                     <<"--baseline : five 7-day ingress cases\n--batch : full factorial + energy + thermal + calibration-point cases\n"
                     <<"--calibrate MEASUREMENTS.ini : inverse water balance / identifiability report\n"
                     <<"--config CONFIG.ini  --scenario all|NAME  --hours HOURS  --step 1..60 (export) --out FOLDER\n"

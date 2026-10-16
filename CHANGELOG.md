@@ -2,6 +2,13 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.5.0] - 2026-10-16
+
+- Laikusoknak áttekinthető főoldal: csak T/RH, nagy szöveges döntés és két külön készülékállapot; a műszaki nedvességadatok külön oldalra kerültek.
+- Az általános „várakozás” helyett kikapcsolt készülékek, konkrét védelmi szünet, eszköznév és perc/másodperc visszaszámlálás. A core csak a hátralévő minimum KI időt publikálja, a döntési szabály változatlan.
+- Bekapcsolási parancs, indulás, igazolt működés, elmaradt működés és ismeretlen visszajelzés egyértelmű szövegekkel.
+- Új regressziók az 1 másodperces visszaszámlálási határra és a parancs/feedback szövegek helyességére; a szimuláció szünete külön jelölve.
+
 ## [0.4.0] - 2026-10-16
 
 - Interaktív Windows kijelzőalkalmazás a változatlan DryingController maggal, négy kattintható 320×480-as oldallal.

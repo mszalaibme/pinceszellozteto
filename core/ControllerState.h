@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 namespace ventilation {
 enum class Mode { Auto, On, Off, ManualDehumidifier,
     ManualVentilation = On, ManualOff = Off };
@@ -28,5 +29,6 @@ struct ControllerOutput {
     bool tankEstimateAvailable = false;
     double estimatedTankLevelLiters = 0;
     double dehumidifierRuntimeSeconds = 0;
+    std::uint64_t remainingWaitMs = 0; // Earliest permitted start; conditions are rechecked then.
 };
 }

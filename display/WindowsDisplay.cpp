@@ -2,6 +2,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include "DisplaySession.h"
+#include "DisplayStatus.h"
 #include "core/Psychrometrics.h"
 #include <algorithm>
 #include <array>
@@ -25,7 +26,7 @@ double windowScale=1;
 HWND mainWindow=nullptr,editBT=nullptr,editBR=nullptr,editOT=nullptr,editOR=nullptr,presetBox=nullptr,faultBox=nullptr,dynamicCheck=nullptr,speedBox=nullptr,playButton=nullptr;
 HFONT controlFont=nullptr;
 std::vector<std::wstring> events;
-std::wstring notice=L"Érintsd meg a kijelző gombjait.";
+std::wstring notice=L"A szimuláció szünetel. Indítsd az időt, vagy használd a +perc gombokat.";
 std::string lastReason;
 constexpr int sx=42,sy=120,sw=400,sh=600;
 
@@ -55,29 +56,10 @@ void button(HDC dc,int x,int y,int w,int h,const std::wstring& value,bool active
     fill(dc,x,y,w,h,active?accent:card,7); text(dc,x,y+(h-15)/2-2,w,h,value,12,active?lcd:white,true,DT_CENTER);
 }
 std::wstring reason() {
-    const auto& o=session.output();
-    switch(o.reasonCode) {
-    case ReasonCode::SensorFailure: return L"Szenzorhiba · AUTO kimenetek KI";
-    case ReasonCode::MinimumOff: return o.reason[0]=='V'?L"Ventilátor minimum KI idő":L"Kompresszor minimum KI idő";
-    case ReasonCode::MinimumOn: return L"Minimum BE idő tartja a kimenetet";
-    case ReasonCode::OutdoorAirDrier: return L"A kültéri levegő alkalmas szárításra";
-    case ReasonCode::DehumidifierPreferred: return L"A szellőztetés most nem alkalmas";
-    case ReasonCode::AutoRestartUnverified: return L"Készülék újraindulása nincs igazolva";
-    case ReasonCode::NoPowerDraw: return L"Ellenőrizd: tartály / készülék / táp";
-    case ReasonCode::DeviceFault: return L"A készülék hibát jelez";
-    case ReasonCode::Manual: return L"Kézzel választott üzemmód";
-    case ReasonCode::ClockFailure: return L"Órahiba · kimenetek KI";
-    default: return L"A páratartalom megfelelő";
-    }
+    auto value=describe(session).explanation;std::replace(value.begin(),value.end(),L'\n',L' ');return value;
 }
 std::wstring stateTitle() {
-    const auto& o=session.output();
-    if(o.sensorWarning && session.mode()==Mode::Auto) return L"SZENZORHIBA";
-    if(o.state==ControllerState::DehumidifierError) return L"KÉSZÜLÉKFIGYELMEZTETÉS";
-    if(o.state==ControllerState::WaitingMinimumOffTime) return L"VÁRAKOZÁS";
-    if(o.fanRequested) return L"SZELLŐZTETÉS";
-    if(o.dehumidifierRequested) return L"PÁRAMENTESÍTÉS";
-    return session.mode()==Mode::Off?L"KÉZI KIKAPCSOLÁS":L"NYUGALMI ÁLLAPOT";
+    auto value=describe(session).title;std::replace(value.begin(),value.end(),L'\n',L' ');return value;
 }
 void record() {
     if(lastReason!=session.output().reason) {
@@ -87,12 +69,10 @@ void record() {
     }
 }
 void climateCard(HDC dc,int x,const std::wstring& title,ClimateReading reading) {
-    fill(dc,x,58,145,119,card,10); text(dc,x+12,68,120,20,title,10,muted,true);
+    fill(dc,x,58,145,99,card,10); text(dc,x+12,67,120,20,title,10,muted,true);
     const bool valid=reading.isPlausible();
-    text(dc,x+12,89,128,30,valid?number(reading.temperatureC)+L" °C":L"— °C",25,white,true);
-    text(dc,x+12,121,120,20,valid?number(reading.humidityRH,0)+L" % RH":L"NINCS ADAT",15,valid?green:red,true);
-    const auto props=valid?psychrometrics::calculate(reading.temperatureC,reading.humidityRH):std::nullopt;
-    text(dc,x+12,148,130,22,props?number(props->absoluteHumidityGm3)+L" g/m³  · DP "+number(props->dewPointC.value_or(NAN)):L"Ellenőrizd a szenzort",9,muted);
+    text(dc,x+12,87,128,31,valid?number(reading.temperatureC)+L" °C":L"— °C",25,white,true);
+    text(dc,x+12,121,120,26,valid?number(reading.humidityRH,0)+L" %":L"NINCS ADAT",23,valid?green:red,true);
 }
 struct Setting { const wchar_t* name; double step,low,high; };
 const std::array<Setting,18> settings{{
@@ -150,23 +130,25 @@ void drawScreen(HDC dc) {
     fill(dc,0,0,320,480,lcd);
     text(dc,13,12,210,24,L"PINCE / VEZÉRLŐ",12,white,true);
     text(dc,214,13,92,20,L"● SZIMULÁCIÓ",9,green,true,DT_RIGHT);
-    text(dc,13,34,270,18,L"Üzemidő "+clockText(static_cast<double>(session.now())/1000)+L"  ·  Cél "+number(session.configuration().targetBasementRH,0)+L"%",10,muted);
+    text(dc,13,34,220,18,session.mode()==Mode::Auto?L"AUTOMATIKA AKTÍV · FIGYELI A PINCÉT":session.mode()==Mode::Off?L"AUTOMATIKUS SZÁRÍTÁS LETILTVA":L"KÉZI VEZÉRLÉS",9,muted);
+    text(dc,239,34,67,18,L"Cél: "+number(session.configuration().targetBasementRH,0)+L"%",10,muted,false,DT_RIGHT);
     const auto& out=session.output();
     if(page==0) {
         climateCard(dc,10,L"PINCE",session.basement()); climateCard(dc,165,L"KINT",session.outside());
-        fill(dc,10,186,300,42,card,8); text(dc,22,196,180,25,L"Δ ABSZOLÚT NEDVESSÉG",10,muted,true);
-        text(dc,189,193,110,29,number(out.differenceGm3)+L" g/m³",17,green,true,DT_RIGHT);
-        const bool warning=out.state==ControllerState::DehumidifierError||out.sensorWarning;
-        fill(dc,10,237,300,76,card,9); fill(dc,10,246,3,55,warning?amber:green);
-        text(dc,23,246,279,24,stateTitle(),15,warning?amber:white,true);
-        text(dc,23,277,271,30,reason(),11,muted);
-        text(dc,17,324,143,24,L"Venti  "+std::wstring(out.fanRequested?L"● BE":L"○ KI"),14,out.fanRequested?green:muted,true);
-        text(dc,165,324,143,24,L"Páram.  "+std::wstring(out.dehumidifierRequested?L"● BE":L"○ KI"),14,out.dehumidifierRequested?green:muted,true);
-        std::wstring warningText=out.sensorWarning?L"Szenzorhiba! Kézi működés lehetséges.":out.highHumidityWarning?L"Magas páratartalom!":out.dehumidifierIneffective?L"A páramentesítés hatása nem érzékelhető.":L"A BE felirat kimeneti parancsot jelent.";
-        text(dc,17,354,289,23,warningText,10,out.sensorWarning||out.highHumidityWarning?amber:muted);
-        const std::array<std::wstring,4> names{L"AUTO",L"VENTI",L"PÁRAM.",L"OFF"};
+        const auto status=describe(session);
+        const COLORREF accent=status.tone==StatusTone::Error?red:status.tone==StatusTone::Attention?amber:status.tone==StatusTone::Active?green:white;
+        fill(dc,10,167,300,111,card,9);fill(dc,10,179,3,86,accent);
+        text(dc,23,176,276,51,status.title,19,accent,true);
+        text(dc,23,235,276,38,status.explanation,11,white);
+        fill(dc,10,288,300,37,card,7);fill(dc,10,333,300,37,card,7);
+        text(dc,21,299,132,21,L"Ventilátor",13,white,true);
+        text(dc,150,299,148,21,status.fan,12,out.fanRequested?green:muted,true,DT_RIGHT);
+        text(dc,21,344,132,21,L"Páramentesítő",13,white,true);
+        text(dc,150,344,148,21,status.dehumidifier,12,status.dehumidifierConfirmedRunning?green:out.dehumidifierRequested?amber:muted,true,DT_RIGHT);
+        const std::array<std::wstring,4> names{L"AUTO",L"VENTILÁTOR",L"PÁRAMENTESÍTŐ",L"KI"};
         const std::array<Mode,4> modes{Mode::Auto,Mode::ManualVentilation,Mode::ManualDehumidifier,Mode::Off};
-        for(int i=0;i<4;++i) button(dc,10+i*77,386,69,33,names[static_cast<size_t>(i)],session.mode()==modes[static_cast<size_t>(i)]);
+        const int positions[]{10,66,158,270},widths[]{50,86,106,40};
+        for(int i=0;i<4;++i) button(dc,positions[i],386,widths[i],33,names[static_cast<size_t>(i)],session.mode()==modes[static_cast<size_t>(i)]);
     } else if(page==1) {
         text(dc,15,64,290,28,L"PÁRAMENTESÍTŐ",19,white,true);
         const auto f=session.feedback();
@@ -174,15 +156,15 @@ void drawScreen(HDC dc) {
             text(dc,17,y,140,24,label,11,muted);text(dc,148,y-2,154,27,value,15,color,true,DT_RIGHT);
             line(dc,17,y+28,303,y+28,card);
         };
-        row(111,L"Konnektor parancs",out.dehumidifierRequested?L"BE":L"KI",out.dehumidifierRequested?green:muted);
-        const std::string fb=feedbackName(f.feedback);
-        row(153,L"Visszajelzés",std::wstring(fb.begin(),fb.end()),f.feedback==DehumidifierFeedback::Running?green:amber);
+        row(111,L"Bekapcsolás kérése",out.dehumidifierRequested?L"BEKAPCSOLVA":L"KIKAPCSOLVA",out.dehumidifierRequested?green:muted);
+        const auto status=describe(session);
+        row(153,L"Készülék működése",status.dehumidifier,status.dehumidifierConfirmedRunning?green:amber);
         row(195,L"Mért teljesítmény",number(f.powerWatts,0)+L" W",white);
         row(237,L"Parancs üzemideje",clockText(out.dehumidifierRuntimeSeconds),white);
         row(279,L"Becsült tartály",out.tankEstimateAvailable?number(out.estimatedTankLevelLiters,2)+L" / "+number(session.configuration().tankCapacityLiters)+L" L":L"ISMERETLEN",white);
-        text(dc,17,314,288,26,L"ESTIMATED · nem telítettségszenzor",10,amber);
+        text(dc,17,314,288,26,L"Csak becslés, nem tartályérzékelő.",10,amber);
         button(dc,14,347,292,37,L"TARTÁLY ÜRÍTVE");
-        text(dc,17,393,290,27,out.reasonCode==ReasonCode::NoPowerDraw?L"Nincs működés. Tartály / készülék / táp?":L"Az ürítés gomb a becslést is nullázza.",10,out.reasonCode==ReasonCode::NoPowerDraw?amber:muted);
+        button(dc,14,391,292,29,L"MŰSZAKI ADATOK ›");
     } else if(page==2) {
         for(int row=0;row<6;++row) {
             const int index=settingsPage*6+row,y=61+row*47;
@@ -194,16 +176,28 @@ void drawScreen(HDC dc) {
         button(dc,14,350,60,29,L"‹");button(dc,246,350,60,29,L"›");
         text(dc,89,356,140,23,L"BEÁLLÍTÁSOK  "+std::to_wstring(settingsPage+1)+L" / 3",10,muted,true,DT_CENTER);
         button(dc,14,389,141,31,L"MENTÉS",true);button(dc,165,389,141,31,L"ALAPÉRTÉKEK");
-    } else {
+    } else if(page==3) {
         text(dc,15,63,290,26,L"ELŐZMÉNYEK",19,white,true);
         chart(dc,103,143,true);chart(dc,260,125,false);
         text(dc,17,397,285,25,L"Percenkénti minta · legfeljebb 24 óra",10,muted);
+    } else {
+        text(dc,15,66,290,26,L"MŰSZAKI ADATOK",18,white,true);
+        int y=110;
+        for(const auto& entry:std::array<std::pair<std::wstring,ClimateReading>,2>{{{L"PINCE",session.basement()},{L"KINT",session.outside()}}}) {
+            text(dc,17,y,280,20,entry.first,12,green,true);
+            const auto p=entry.second.isPlausible()?psychrometrics::calculate(entry.second.temperatureC,entry.second.humidityRH):std::nullopt;
+            text(dc,17,y+28,282,24,L"Abszolút nedvesség: "+(p?number(p->absoluteHumidityGm3):L"—")+L" g/m³",13,white);
+            text(dc,17,y+57,282,23,L"Harmatpont: "+(p?number(p->dewPointC.value_or(NAN)):L"—")+L" °C",13,white);y+=105;
+        }
+        text(dc,17,331,285,25,L"Különbség: "+number(out.differenceGm3)+L" g/m³",14,white);
+        text(dc,17,367,285,43,L"Ezekből számol a vezérlés. A főoldal\nközvetlenül a készülékek állapotát mutatja.",11,muted);
     }
     fill(dc,0,432,320,48,card);
     const std::array<std::wstring,4> tabs{L"FŐOLDAL",L"KÉSZÜLÉK",L"BEÁLLÍTÁS",L"ELŐZMÉNY"};
     for(int i=0;i<4;++i) {
-        if(i==page) fill(dc,i*80+12,432,56,3,green);
-        text(dc,i*80,451,80,20,tabs[static_cast<size_t>(i)],9,i==page?green:muted,true,DT_CENTER);
+        const bool active=i==page||(page==4&&i==1);
+        if(active) fill(dc,i*80+12,432,56,3,green);
+        text(dc,i*80,451,80,20,tabs[static_cast<size_t>(i)],9,active?green:muted,true,DT_CENTER);
     }
 }
 void draw(HDC dc) {
@@ -220,7 +214,8 @@ void draw(HDC dc) {
     text(dc,500,190,66,24,L"°C",13,ink);text(dc,740,190,50,24,L"°C",13,ink);
     text(dc,500,230,66,24,L"RH %",13,ink);text(dc,740,230,50,24,L"RH %",13,ink);
     text(dc,500,303,490,24,L"HIBA / VISSZAJELZÉS",11,muted,true);
-    text(dc,500,392,490,24,L"SZIMULÁCIÓS IDŐ",11,muted,true);
+    text(dc,500,392,340,24,playing?L"SZIMULÁCIÓS IDŐ · HALAD":L"SZIMULÁCIÓS IDŐ · SZÜNETEL",11,muted,true);
+    text(dc,848,392,182,22,clockText(static_cast<double>(session.now())/1000),12,ink,true,DT_RIGHT);
     text(dc,500,482,510,36,notice,12,ink);
     text(dc,500,529,510,24,L"DÖNTÉSI NAPLÓ",11,muted,true);
     for(size_t i=0;i<events.size();++i) text(dc,500,555+static_cast<int>(i)*27,530,27,events[i],11,i==0?ink:muted);
@@ -249,8 +244,10 @@ void screenClick(int x,int y) {
     if(y>=432) { page=std::min(3,x/80);if(page==2) draft=session.configuration();return; }
     if(page==0 && y>=386 && y<=419) {
         const std::array<Mode,4> modes{Mode::Auto,Mode::ManualVentilation,Mode::ManualDehumidifier,Mode::Off};
-        const int i=(x-10)/77;if(x>=10&&i<4) session.setMode(modes[static_cast<size_t>(i)]);
+        const int positions[]{10,66,158,270},widths[]{50,86,106,40};
+        for(int i=0;i<4;++i) if(x>=positions[i]&&x<positions[i]+widths[i]) session.setMode(modes[static_cast<size_t>(i)]);
     } else if(page==1 && y>=347&&y<=384) { session.emptyTank();SendMessageW(faultBox,CB_SETCURSEL,0,0);notice=L"Tartály ürítve; becslés nullázva."; }
+    else if(page==1 && y>=391&&y<=420) page=4;
     else if(page==2) {
         if(y>=61&&y<343&&x>=227) { int r=(y-61)/47;settingChange(settingsPage*6+r,x<265?-1:1); }
         else if(y>=350&&y<379) { if(x<80) settingsPage=(settingsPage+2)%3;else if(x>240) settingsPage=(settingsPage+1)%3; }
@@ -276,7 +273,7 @@ LRESULT CALLBACK windowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     case WM_CREATE: {
         mainWindow=hwnd;controlFont=CreateFontW(-static_cast<int>(std::lround(16*windowScale)),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Segoe UI");
         presetBox=child(L"COMBOBOX",L"",CBS_DROPDOWNLIST|WS_VSCROLL,610,104,420,270,100);
-        const std::array<const wchar_t*,8> presets{L"Tél · szellőztetés (5 perc várakozás)",L"Nyár · páramentesítés (10 perc várakozás)",L"Hideg pince · szellőztetés tiltva",L"Célérték alatt · nyugalom",L"Szenzorhiba · AUTO biztonsági KI",L"Tele tartály · parancs BE, működés nincs",L"Készülék restart nincs igazolva",L"Nincs visszajelzés · állapot ismeretlen"};
+        const std::array<const wchar_t*,8> presets{L"Tél · ventilátor 5 perc múlva indulhat",L"Nyár · páramentesítő 10 perc múlva indulhat",L"Hideg pince · szellőztetés tiltva",L"Megfelelő páratartalom · készülékek kikapcsolva",L"Szenzorhiba · mindkét készülék leállítva",L"Tele tartály · páramentesítő nem működik",L"Készülék újraindulása nincs igazolva",L"Nincs visszajelzés · működés nem igazolt"};
         for(auto p:presets) SendMessageW(presetBox,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(p));SendMessageW(presetBox,CB_SETCURSEL,0,0);
         editBT=child(L"EDIT",L"14.7",ES_AUTOHSCROLL,570,184,126,29,110);editBR=child(L"EDIT",L"78",ES_AUTOHSCROLL,570,224,126,29,111);
         editOT=child(L"EDIT",L"5.3",ES_AUTOHSCROLL,810,184,126,29,112);editOR=child(L"EDIT",L"91",ES_AUTOHSCROLL,810,224,126,29,113);
@@ -338,7 +335,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return ok?0:1;
     }
     if(argc>=3 && std::wstring(argv[1])==L"--render") {
-        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) page=std::clamp(std::stoi(argv[4]),0,3);if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
+        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) page=std::clamp(std::stoi(argv[4]),0,4);if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
         catch(...) { LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 1; }
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 0;
     }
@@ -347,7 +344,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
     RECT work{};SystemParametersInfoW(SPI_GETWORKAREA,0,&work,0);
     windowScale=std::min({1.0,static_cast<double>(work.right-work.left-40)/1100,static_cast<double>(work.bottom-work.top-70)/820});
     RegisterClassW(&wc);RECT r{0,0,static_cast<LONG>(std::lround(1100*windowScale)),static_cast<LONG>(std::lround(820*windowScale))};AdjustWindowRect(&r,WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,FALSE);
-    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab · interaktív kijelzőszimulátor",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
+    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab 0.5 · egyértelmű készülékállapotok",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
     if(!hwnd) { Gdiplus::GdiplusShutdown(gdip);return 1; }
     ShowWindow(hwnd,show);UpdateWindow(hwnd);
     MSG msg{};while(GetMessageW(&msg,nullptr,0,0)>0) { if(!IsDialogMessageW(hwnd,&msg)) {TranslateMessage(&msg);DispatchMessageW(&msg);} }

@@ -1,12 +1,22 @@
 # Interaktív Windows kijelzőszimulátor
 
+## Egyértelmű állapotok (0.5)
+
+A főoldalon csak a két hőmérséklet és páratartalom, a szöveges döntés és a készülékek állapota szerepel. Nincs ΔAH, g/m³ vagy harmatpont. Ezek a KÉSZÜLÉK → MŰSZAKI ADATOK oldalon érhetők el.
+
+A korábbi „várakozás” minimum kikapcsolási időt jelentett. Most a képernyő kimondja: MOST EGYIK KÉSZÜLÉK SEM MEGY, megnevezi az indulásra jogosult készüléket és a hátralévő időt percben/másodpercben. A számláló az indítás legkorábbi lehetőségét jelenti: a feltételeket akkor újra ellenőrzi a vezérlés. A minimum KI idők nem változtak.
+
+A ventilátor BEKAPCSOLVA felirata a kimenet bekapcsolását jelenti; forgásérzékelő nincs. A páramentesítő MŰKÖDIK állapota külön visszajelzést igényel. Ha csak tápot kapcsoltunk, MÉG NEM MEGY jelenik meg; visszajelzés hiányában NEM IGAZOLT, elmaradt működésnél NEM MŰKÖDIK. A konnektor bekapcsolása nem egyenlő a kompresszor működésével. A tele tartályt továbbra sem diagnosztizálja biztosan.
+
+A jobb oldalon az idő külön HALAD / SZÜNETEL jelölést kap. Az AUTO vezérlés aktív lehet úgy is, hogy mindkét készülék kikapcsolva van.
+
 Indítás: **START.cmd** vagy **pince-kijelzo.exe**. Nincs böngésző-, Python-, ESP32- vagy LVGL-függőség. A 320×480-as kijelző 125%-os nézetben jelenik meg; kisebb asztalon az egész ablak arányosan csökken. Az egér az érintést helyettesíti.
 
 Ez a kijelző működését bemutató natív Windows UI-prototípus. A rajzolás Win32/GDI, a döntést a meglévő **DryingController C++ mag** hozza. A firmware-re telepíthető LVGL-renderelő és a hardverillesztés későbbi munka; a Windows-kijelző nem bizonyítja azok működését.
 
 ## Amit ki lehet próbálni
 
-- **Főoldal:** pince és kültér T/RH, számított abszolút nedvesség és harmatpont (DP), ΔAH, aktuális döntés és indok, ventilátor- és konnektorparancs. Az AUTO / VENTI / PÁRAM. / OFF gombok működnek.
+- **Főoldal:** pince és kültér T/RH, aktuális döntés és közérthető indok, ventilátor- és készülékállapot. Az AUTO / VENTI / PÁRAM. / OFF gombok működnek.
 - **Készülék:** parancs és külön visszajelzés, pillanatnyi szimulált mérési teljesítmény, parancs üzemideje, becsült tartály, ürítésgomb. Az ESTIMATED érték nem tényleges tartályérzékelő.
 - **Beállítás:** három oldalon 18 mező, +/−, MENTÉS és ALAPÉRTÉKEK. A módosítás csak mentéskor kerül az élő vezérlőre; az érvénytelen kombinációt elutasítja. Az alapértékek visszatöltése is tervezet, mentést igényel. A gyári core-alapértékben a készülék auto restartja NEM igazolt.
 - **Előzmény:** percenkénti RH- és hőmérsékletminta, legfeljebb 1441 pont. A minta kezdetben, illetve klímamódosításkor is bekerül. Azonos időpontban több próbapadi módosítás lehetséges.
@@ -16,8 +26,8 @@ A jobb oldali próbapadon külön állítható a klíma, a hibainjektálás, az 
 ## Gyors próbák
 
 1. Válaszd a **Tél** próbát. Induláskor mindkét kimenet KI. Nyomd meg az **+10 perc** gombot: a minimum KI idő leteltével szellőztet.
-2. Válaszd a **Nyár** próbát. **+10 perc** után a konnektor BE; további **+1 perc** után a KÉSZÜLÉK oldalon RUNNING, kb. 300 W jelenik meg. Ez feltételezett készülékfogyasztás.
-3. Válaszd a **Tele tartály** próbát. A próba előrelépteti az időt a hiba láthatóságához (14:01). A konnektor BE, a visszajelzés NO_POWER_DRAW. A kijelző csak tartály/készülék/táp ellenőrzését kéri, nem állít biztos hibadiagnózist. Az ürítésgomb megszünteti az injektált telítettséget és nullázza a becslést; az indulásnak újra van késleltetése.
+2. Válaszd a **Nyár** próbát. **+10 perc** után a konnektor BE; további **+1 perc** után a KÉSZÜLÉK oldalon MŰKÖDIK, kb. 300 W jelenik meg. Ez feltételezett készülékfogyasztás.
+3. Válaszd a **Tele tartály** próbát. A próba előrelépteti az időt a hiba láthatóságához (14:01). A konnektor BE, a visszajelzés NEM MŰKÖDIK. A kijelző csak tartály/készülék/táp ellenőrzését kéri, nem állít biztos hibadiagnózist. Az ürítésgomb megszünteti az injektált telítettséget és nullázza a becslést; az indulásnak újra van késleltetése.
 4. Válaszd a **Szenzorhiba** próbát. AUTO-ban mindkét kimenet KI; a kézi VENTI továbbra is választható, látható figyelmeztetéssel. NaN külön is injektálható.
 5. A **Restart nincs igazolva** próbában a vezérlő megtagadja a páramentesítő indítását. A BEÁLLÍTÁS második lapozása után az „Auto restart igazolt” mezővel tesztelhető a változás. Ez nem igazolja a valódi készülék képességét.
 
@@ -45,4 +55,4 @@ Hibainjektáláskor a NO_POWER / FAULT / tele tartály leállítja a próbapadi 
 .\pince-kijelzo.exe --render settings.png 0 2
 ```
 
-Az argumentumok: PNG útvonal, próba index 0–7, képernyő 0–3, opcionális további másodperc. A képméret 320×480. Az exportok vizuálisan ellenőrizhetők; az élő natív ablak teljes OS-eseményútja külön kézi próba.
+Az argumentumok: PNG útvonal, próba index 0–7, képernyő 0–4 (4: műszaki adatok), opcionális további másodperc. A képméret 320×480. Az exportok vizuálisan ellenőrizhetők; az élő natív ablak teljes OS-eseményútja külön kézi próba.

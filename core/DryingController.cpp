@@ -76,8 +76,10 @@ ControllerOutput DryingController::update(const ClimateReading& b,const ClimateR
         wantDehum=true; wantVent=false;
     }
     if(wantVent) {
-        if(!fan_ && mode_==Mode::Auto && now-fanChanged_<config_.ventilationMinimumOffTime)
+        if(!fan_ && mode_==Mode::Auto && now-fanChanged_<config_.ventilationMinimumOffTime) {
+            out.remainingWaitMs=config_.ventilationMinimumOffTime-(now-fanChanged_);
             return finish(false,false,ControllerState::WaitingMinimumOffTime,ReasonCode::MinimumOff,"VENTILATION_MINIMUM_OFF");
+        }
         const bool holding=!demand_ && mode_==Mode::Auto;
         return finish(true,false,manualVent?ControllerState::ManualVentilation:ControllerState::Ventilating,
             holding?ReasonCode::MinimumOn:manualVent?ReasonCode::Manual:ReasonCode::OutdoorAirDrier,
@@ -89,8 +91,10 @@ ControllerOutput DryingController::update(const ClimateReading& b,const ClimateR
         return finish(false,false,ControllerState::DehumidifierError,ReasonCode::AutoRestartUnverified,"AUTO_RESTART_NOT_VERIFIED");
     if(deviceFault)
         return finish(false,false,ControllerState::DehumidifierError,ReasonCode::DeviceFault,"DEHUMIDIFIER_FAULT");
-    if(!dehum_ && now-dehumChanged_<config_.dehumidifierMinimumOffTime)
+    if(!dehum_ && now-dehumChanged_<config_.dehumidifierMinimumOffTime) {
+        out.remainingWaitMs=config_.dehumidifierMinimumOffTime-(now-dehumChanged_);
         return finish(false,false,ControllerState::WaitingMinimumOffTime,ReasonCode::MinimumOff,"COMPRESSOR_MINIMUM_OFF");
+    }
     const bool noDraw=monitored && (feedback.feedback==DehumidifierFeedback::NoPowerDraw
         || feedback.feedback==DehumidifierFeedback::Off || (powerKnown && feedback.powerWatts<config_.dehumidifierMinimumPowerWatts));
     if(dehum_ && running) ranSinceCommand_=true;

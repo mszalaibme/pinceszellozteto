@@ -1,12 +1,14 @@
 # Pince-szellőztető és páramentesítő vezérlő
 
-**0.4.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
+**0.5.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
 A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
 A [szimulációs kiegészítés eredményei](docs/simulation_addendum_results.md) tartalmazzák a 900 kombinációs rácsot, a kalibráció korlátait és a feltárt szabályozási problémát. A 0,21 L/h és 300 W feltételezés, nem gyári adat.
 
 ## Interaktív kijelző Windowsra
+
+A főoldalon a készülékek állapota nagy, közérthető feliratként jelenik meg. Az indítás előtti védelmi szünetnél a készülék neve és a hátralévő perc/másodperc látszik. A delta, abszolút nedvesség és harmatpont a KÉSZÜLÉK → MŰSZAKI ADATOK oldalra került. A „MŰKÖDIK” csak visszajelzéssel igazolt páramentesítőnél jelenik meg.
 
 A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. Kattintható 320×480-as kijelző, négy oldal, AUTO/VENTI/PÁRAM./OFF, 18 beállítás, nyolc előre beállított próba, szerkeszthető klíma, hibainjektálás, időgyorsítás, reboot és tartályürítés. A döntést a meglévő C++ DryingController hozza; a Windows-rajzolás natív GDI UI-prototípus. A firmware LVGL-renderelője még nincs implementálva.
 
@@ -80,3 +82,7 @@ A `tools/build_test.py --config Release --cmake ABSZOLUT_CMAKE_UT` ugyanígy for
 **NEEDS HARDWARE VERIFICATION:** board revision, TFT/touch/SD/backlight/I2C, szabad GPIO, mindkét relépolaritás, monitor. **NEEDS ELECTRICAL DESIGN / VERIFICATION:** kompresszorhoz alkalmas hálózati kapcsolás/kontaktor. A restart capability alapból false; csak a konkrét készüléken ellenőrzött képesség engedélyezhető.
 
 A modellek nem garantálják a valódi pince felületeinek kondenzációmentességét vagy a két mérés közötti túlhűlés kizárását. [Korábbi rendszer-validáció és korlátok](docs/system_validation.md).
+
+## Beszerzési előkészítés
+
+[HESTORE alkatrészlista és nyitott hardverkérdések, 2026-10-16](docs/hestore_bom_2026-10-16.md): 21 kosártétel, beszerzési idő és telepítési feltételek. Előzetes kosár, nem teljes telepítési terv.
