@@ -21,16 +21,19 @@ jobs:
         run: cmake --build build --config Release
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure -V
-      - name: Run all twelve scenarios and prepare portable package
+      - name: Run 950 simulations and prepare portable package
         shell: pwsh
         run: |
-          build/Release/pinceszellozteto.exe --scenario all --out package/simulation-output
+          build/Release/pinceszellozteto.exe --batch --config config/baseline.ini --out package/simulation-output
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item build/Release/pinceszellozteto.exe package/
           Copy-Item tools/windows-launch.cmd package/START.cmd
           Copy-Item docs/windows_quickstart.md package/README.md
+          Copy-Item config package/config -Recurse
+      - name: Independent water and energy audit
+        run: python tools/audit_batch.py package/simulation-output/sensitivity-summary.csv
       - name: Dashboard logic smoke test (mock DOM)
-        run: node tools/dashboard_smoke_test.cjs package/simulation-output/report.html
+        run: node tools/dashboard_smoke_test.cjs package/simulation-output/report.html 6
       - name: Windows CLI and Unicode paths
         run: python tools/test_cli.py build/Release/pinceszellozteto.exe
       - uses: actions/upload-artifact@v4

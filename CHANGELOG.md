@@ -2,6 +2,15 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.3.0] - 2026-10-16
+
+- Konfigurálható 26,4 m³ baseline, empirikus 0,21 L/h készülékgörbe, feltételezett 300 W, 5 L tartály; ismeretlen gyári adatok elkülönítve.
+- Kalibrációs CLI hiányos megfigyelések és azonosíthatósági korlátok jelzésével.
+- 950 futás, benne 900 teljes faktoriális kombináció; CSV, offline SVG/HTML és opcionális matplotlib grafikonok.
+- Épület- és levegő-hőkapacitás, fal/talaj és szellőzés hőátadása, tényleges intervallumenergia, kapcsolható látens hő.
+- Javítva a végponti teljesítményből számolt túlzott energia, az RH-függő kivonás integrálása és a fizikai/döntési/export ütemezés összekapcsolása.
+- 15 tesztcsoport, konvergencia- és könyvelési regressziók. A jelenlegi vezérlési szabály mellett feltárt RH-célhiba dokumentálva; a szabály változatlan.
+
 ## [0.2.0] - 2026-10-16
 
 ### Új alapkövetelmények

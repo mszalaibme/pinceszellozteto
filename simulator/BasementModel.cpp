@@ -41,14 +41,29 @@ double BasementModel::removeWaterGram(double requested) {
     return removed;
 }
 void BasementModel::evolveTemperature(const ClimateReading& outside,bool fanOn,double heat,double seconds,
-    double wallT,double capacity,double conductance) {
+    const ThermalParameters& p) {
+    const double capacity=p.effectiveThermalCapacityJPerK+parameters_.volumeM3*p.airDensityKgM3*p.airSpecificHeatJPerKgK;
+    const double wallT=p.wallTemperatureC, conductance=p.wallAirHeatTransferWPerK;
     if(!outside.isPlausible() || !std::isfinite(heat) || heat<0 || !std::isfinite(seconds) || seconds<0 || seconds>86400
-        || !validT(wallT) || !std::isfinite(capacity) || capacity<=0 || !std::isfinite(conductance) || conductance<=0)
+        || !validT(wallT) || !std::isfinite(capacity) || capacity<=0 || !std::isfinite(conductance) || conductance<=0
+        || !std::isfinite(p.effectiveThermalCapacityJPerK) || p.effectiveThermalCapacityJPerK<0
+        || !std::isfinite(p.airDensityKgM3) || p.airDensityKgM3<=0 || !std::isfinite(p.airSpecificHeatJPerKgK) || p.airSpecificHeatJPerKgK<=0)
         throw std::invalid_argument("Invalid thermal boundary");
-    const double airLoss=fanOn ? parameters_.fanAirflowM3PerHour/3600*1200 : 0;
+    if(seconds==0) return;
+    const double airLoss=fanOn ? parameters_.fanAirflowM3PerHour/3600*p.airDensityKgM3*p.airSpecificHeatJPerKgK : 0;
     const double loss=conductance+airLoss;
     const double equilibrium=(conductance*wallT+airLoss*outside.temperatureC+heat)/loss;
-    setTemperatureC(std::clamp(equilibrium+(temperatureC_-equilibrium)*std::exp(-loss*seconds/capacity),-20.0,50.0));
+    const double old=temperatureC_, rate=loss/capacity;
+    const double fraction=-std::expm1(-rate*seconds);
+    const double next=old+(equilibrium-old)*fraction;
+    // Reject an unsupported physical state; do not silently discard heat by clamping T.
+    if(!validT(next)) throw std::runtime_error("Thermal model left -20..50 C: check configuration and heat capacity");
+    const double integralT=equilibrium*seconds+(old-equilibrium)*fraction/rate;
+    thermalBalance_.suppliedHeatJ+=heat*seconds;
+    thermalBalance_.wallHeatLossJ+=conductance*(integralT-wallT*seconds);
+    thermalBalance_.ventilationHeatLossJ+=airLoss*(integralT-outside.temperatureC*seconds);
+    thermalBalance_.sensibleChangeJ+=capacity*(next-old);
+    setTemperatureC(next);
 }
 void BasementModel::step(const ClimateReading& outside, bool fanOn, double seconds) {
     if (!std::isfinite(seconds) || seconds<0 || seconds>86400)

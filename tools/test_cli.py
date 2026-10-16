@@ -24,3 +24,20 @@ with tempfile.TemporaryDirectory(prefix='pince-test-') as folder:
         failed = subprocess.run([str(exe), *bad, '--out', str(output)], capture_output=True)
         assert failed.returncode != 0, bad
     print('CLI: Unicode path, CSV schema, JSON report, actuator outputs and invalid arguments passed.')
+
+    source = Path(__file__).resolve().parents[1]
+    baseline = Path(folder) / 'baseline'
+    run = subprocess.run([str(exe), '--baseline', '--config', str(source / 'config/baseline.ini'), '--hours', '1', '--out', str(baseline)], capture_output=True)
+    assert run.returncode == 0, run.stderr
+    with next(baseline.glob('*.csv')).open(encoding='utf-8', newline='') as f:
+        fields = csv.DictReader(f).fieldnames
+    assert fields and ('basementTempC' in fields or 'meanRH' in fields), fields
+    calibration = Path(folder) / 'calibration'
+    run = subprocess.run([str(exe), '--calibrate', str(source / 'config/calibration-observed-only.ini'), '--out', str(calibration)], capture_output=True)
+    assert run.returncode == 0, run.stderr
+    assert list(calibration.glob('*.json')) and list(calibration.glob('*.csv'))
+    bad_config = Path(folder) / 'bad.ini'
+    bad_config.write_text('unknownPhysicalParameter=42\n', encoding='utf-8')
+    run = subprocess.run([str(exe), '--baseline', '--config', str(bad_config), '--out', str(baseline)], capture_output=True)
+    assert run.returncode != 0
+    print('CLI: configured baseline, observation-only calibration and unknown config rejection passed.')

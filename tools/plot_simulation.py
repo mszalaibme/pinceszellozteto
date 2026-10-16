@@ -18,7 +18,7 @@ def values(key):
     return [float(r[key]) if r[key] else float('nan') for r in rows]
 time = [t / 3600 for t in values('timestamp')]
 specs = [
-    ('Temperature', '°C', [('basementTemp', 'Basement'), ('outsideTemp', 'Outdoor')]),
+    ('Temperature', '°C', [('basementTempC', 'Basement'), ('outsideTempC', 'Outdoor')]),
     ('Relative humidity (derived)', '%', [('basementRH', 'Basement'), ('outsideRH', 'Outdoor')]),
     ('Absolute humidity', 'g/m³', [('basementAH', 'Basement'), ('outsideAH', 'Outdoor')]),
     ('Humidity advantage', 'g/m³', [('deltaAH', 'Delta AH')]),

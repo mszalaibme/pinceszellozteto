@@ -1,11 +1,8 @@
 #pragma once
 #include "core/ClimateData.h"
+#include "ModelConfiguration.h"
 namespace ventilation::simulation {
-struct ModelParameters {
-    double volumeM3 = 26;
-    double fanAirflowM3PerHour = 100; // Volume flow expressed at basement conditions.
-    double moistureGenerationGramPerHour = 25;
-};
+struct ThermalBalance { double suppliedHeatJ=0,wallHeatLossJ=0,ventilationHeatLossJ=0,sensibleChangeJ=0; };
 struct WaterBalance {
     double initialVaporGram = 0;
     double generatedGram = 0;
@@ -22,18 +19,21 @@ public:
     void step(const ClimateReading& outside, bool fanOn, double durationSeconds);
     double removeWaterGram(double requestedGram);
     void evolveTemperature(const ClimateReading& outside, bool fanOn, double electricalHeatWatts,
-        double seconds, double wallTemperatureC, double heatCapacityJPerK=3000000, double wallConductanceWPerK=35);
+        double seconds, const ThermalParameters& parameters);
     double temperatureC() const { return temperatureC_; }
     double vaporMassGram() const { return vaporMassGram_; }
+    double volumeM3() const { return parameters_.volumeM3; }
     double absoluteHumidityGm3() const { return vaporMassGram_ / parameters_.volumeM3; }
     double relativeHumidity() const;
     ClimateReading reading(Timestamp now) const;
     const WaterBalance& balance() const { return balance_; }
+    const ThermalBalance& thermalBalance() const { return thermalBalance_; }
 private:
     ModelParameters parameters_;
     double temperatureC_;
     double vaporMassGram_;
     WaterBalance balance_;
+    ThermalBalance thermalBalance_;
     double saturationMassGram() const;
 };
 }

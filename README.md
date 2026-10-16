@@ -1,16 +1,21 @@
 # Pince-szellőztető és páramentesítő vezérlő
 
-**0.2.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
+**0.3.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
 A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
+A [szimulációs kiegészítés eredményei](docs/simulation_addendum_results.md) tartalmazzák a 900 kombinációs rácsot, a kalibráció korlátait és a feltárt szabályozási problémát. A 0,21 L/h és 300 W feltételezés, nem gyári adat.
+
 ## Windows: azonnal kipróbálható
 
-A GitHub Actions sikeres futásából letölthető a **pinceszellozteto-windows-x64** artifact. Kicsomagolás után **START.cmd** futtatása indítja a 12 forgatókönyvet és megnyitja az offline grafikus riportot. Az artifact az EXE-t, előállított CSV-ket, a riportot és az indítási útmutatót is tartalmazza. Az aktuális feladat átadási ZIP-je ugyanezt a hordozható csomagot adja.
+A GitHub Actions sikeres futásából letölthető a **pinceszellozteto-windows-x64** artifact. Kicsomagolás után **START.cmd** futtatása indítja a 950 paraméteres szimulációt és megnyitja az offline grafikus riportot. Az artifact az EXE-t, előállított CSV-ket, a riportot és az indítási útmutatót is tartalmazza. Az aktuális feladat átadási ZIP-je ugyanezt a hordozható csomagot adja.
 
-Nincs szükség ESP32-re, LVGL-re, 230 V-ra, Pythonra vagy telepítésre. A böngészőben forgatókönyv-választó, időcsúszka, visszajátszás, nyolc grafikon és állapotnézet érhető el. A böngésző már kiszámolt adatokat mutat; új paraméterekkel az EXE számol újra.
+Nincs szükség ESP32-re, LVGL-re, 230 V-ra, Pythonra vagy telepítésre. A böngészőben forgatókönyv-választó, időcsúszka, visszajátszás, tíz grafikon és állapotnézet érhető el. A böngésző már kiszámolt adatokat mutat; új paraméterekkel az EXE számol újra.
 
 ```powershell
+.\pinceszellozteto.exe --batch --config config/baseline.ini --out simulation-output
+.\pinceszellozteto.exe --baseline --config config/baseline.ini --out baseline
+.\pinceszellozteto.exe --calibrate config/calibration-observed-only.ini --out calibration
 .\pinceszellozteto.exe --list
 .\pinceszellozteto.exe --scenario all --hours 24 --step 60 --out simulation-output
 .\pinceszellozteto.exe --scenario winter --source 208.333333 --out terheles
