@@ -3,6 +3,7 @@
 #include <gdiplus.h>
 #include "DisplaySession.h"
 #include "DisplayStatus.h"
+#include "OledUi.h"
 #include "core/Psychrometrics.h"
 #include <algorithm>
 #include <array>
@@ -19,6 +20,9 @@ constexpr COLORREF ink=RGB(30,58,52),muted=RGB(115,142,133),paper=RGB(242,244,23
 constexpr COLORREF lcd=RGB(13,30,29),card=RGB(24,45,42),white=RGB(232,243,232),green=RGB(156,224,174),amber=RGB(246,197,115),red=RGB(255,152,139);
 DisplaySession session;
 Configuration draft;
+OledUi oled;
+bool legacyScreen=false;
+HWND monitorCheck=nullptr;
 int page=0,settingsPage=0;
 bool playing=false;
 unsigned speed=10;
@@ -126,7 +130,7 @@ void chart(HDC dc,int y,int height,bool humidity) {
         px=x;py=valueY;
     }
 }
-void drawScreen(HDC dc) {
+void drawTouchScreen(HDC dc) {
     fill(dc,0,0,320,480,lcd);
     text(dc,13,12,210,24,L"PINCE / VEZÉRLŐ",12,white,true);
     text(dc,214,13,92,20,L"● SZIMULÁCIÓ",9,green,true,DT_RIGHT);
@@ -200,15 +204,32 @@ void drawScreen(HDC dc) {
         text(dc,i*80,451,80,20,tabs[static_cast<size_t>(i)],9,active?green:muted,true,DT_CENTER);
     }
 }
+void drawScreen(HDC dc) {
+    if(legacyScreen) {drawTouchScreen(dc);return;}
+    fill(dc,0,0,320,480,lcd);
+    text(dc,17,20,286,28,L"PINCE · OLED + 2 GOMB",17,white,true);
+    text(dc,17,54,286,24,L"1,3 hüvelyk · 128 × 64 képpont",12,muted);
+    HDC tiny=CreateCompatibleDC(dc);HBITMAP bitmap=CreateCompatibleBitmap(dc,128,64);
+    auto old=SelectObject(tiny,bitmap);fill(tiny,0,0,128,64,RGB(0,0,0));
+    HFONT font=CreateFontW(-9,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,NONANTIALIASED_QUALITY,FIXED_PITCH,L"Consolas");
+    auto oldFont=SelectObject(tiny,font);SetTextColor(tiny,RGB(255,255,255));SetBkMode(tiny,TRANSPARENT);
+    auto rows=oled.rows(session);
+    for(int i=0;i<6;++i) TextOutW(tiny,1,1+i*10,rows[static_cast<size_t>(i)].c_str(),static_cast<int>(rows[static_cast<size_t>(i)].size()));
+    SetStretchBltMode(dc,COLORONCOLOR);StretchBlt(dc,8,100,304,152,tiny,0,0,128,64,SRCCOPY);
+    SelectObject(tiny,oldFont);DeleteObject(font);SelectObject(tiny,old);DeleteObject(bitmap);DeleteDC(tiny);
+    text(dc,17,270,285,22,L"Oldal "+std::to_wstring(oled.page()+1)+L" / 6"+(oled.editing()?L" · SZERKESZTÉS":L""),12,muted);
+    button(dc,17,310,169,46,L"KÖVETKEZŐ  >");button(dc,198,310,104,46,L"OK");
+    text(dc,17,380,286,67,L"Nincs érintőfelület. A két gombbal lapozhatsz, módot választhatsz és beállíthatod a célértéket.\nBillentyűzet: → és Enter.",12,white);
+}
 void draw(HDC dc) {
     fill(dc,0,0,1100,820,paper);
     text(dc,38,24,700,30,L"Pince Lab",26,ink,true);
-    text(dc,39,61,900,30,L"Érintsd meg a kijelzőt. Változtass állapotot. Nézd meg a döntést.",15,muted);
+    text(dc,39,61,900,30,L"Próbáld ki a kis OLED kijelzőt és a két fizikai gombot.",15,muted);
     fill(dc,28,104,428,632,RGB(33,49,45),25);
     const int saved=SaveDC(dc);
     SetMapMode(dc,MM_ANISOTROPIC);SetWindowExtEx(dc,320,480,nullptr);SetViewportExtEx(dc,sw,sh,nullptr);SetViewportOrgEx(dc,sx,sy,nullptr);
     drawScreen(dc);RestoreDC(dc,saved);
-    text(dc,45,748,405,38,L"320 × 480 · interaktív Windows UI-prototípus\nAz eredeti DryingController C++ maggal.",12,muted);
+    text(dc,45,748,405,38,L"OLED: 128 × 64 · nagyított előnézet\nValódi C++ vezérlés és vízgőztömeg-modell.",12,muted);
     text(dc,500,108,540,25,L"PRÓBAPAD",12,ink,true);
     text(dc,500,158,500,22,L"PINCE                             KÜLTÉR",12,muted,true);
     text(dc,500,190,66,24,L"°C",13,ink);text(dc,740,190,50,24,L"°C",13,ink);
@@ -241,6 +262,13 @@ double input(HWND c) {
 }
 void screenClick(int x,int y) {
     if(x<0||y<0||x>=320||y>=480) return;
+    if(!legacyScreen) {
+        if(y>=310 && y<=356) {
+            if(x>=17 && x<=186) oled.next(session);
+            else if(x>=198 && x<=302) oled.select(session);
+        }
+        return;
+    }
     if(y>=432) { page=std::min(3,x/80);if(page==2) draft=session.configuration();return; }
     if(page==0 && y>=386 && y<=419) {
         const std::array<Mode,4> modes{Mode::Auto,Mode::ManualVentilation,Mode::ManualDehumidifier,Mode::Off};
@@ -273,14 +301,14 @@ LRESULT CALLBACK windowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
     case WM_CREATE: {
         mainWindow=hwnd;controlFont=CreateFontW(-static_cast<int>(std::lround(16*windowScale)),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Segoe UI");
         presetBox=child(L"COMBOBOX",L"",CBS_DROPDOWNLIST|WS_VSCROLL,610,104,420,270,100);
-        const std::array<const wchar_t*,8> presets{L"Tél · ventilátor 5 perc múlva indulhat",L"Nyár · páramentesítő 10 perc múlva indulhat",L"Hideg pince · szellőztetés tiltva",L"Megfelelő páratartalom · készülékek kikapcsolva",L"Szenzorhiba · mindkét készülék leállítva",L"Tele tartály · páramentesítő nem működik",L"Készülék újraindulása nincs igazolva",L"Nincs visszajelzés · működés nem igazolt"};
+        const std::array<const wchar_t*,8> presets{L"Tél · ventilátor 5 perc múlva indulhat",L"Nyár · páramentesítő 10 perc múlva indulhat",L"Hideg pince · szellőztetés tiltva",L"Megfelelő páratartalom · készülékek kikapcsolva",L"Szenzorhiba · mindkét készülék leállítva",L"Tele tartály · úszó azonnal letiltja",L"Készülék újraindulása nincs igazolva",L"Nincs visszajelzés · működés nem igazolt"};
         for(auto p:presets) SendMessageW(presetBox,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(p));SendMessageW(presetBox,CB_SETCURSEL,0,0);
         editBT=child(L"EDIT",L"14.7",ES_AUTOHSCROLL,570,184,126,29,110);editBR=child(L"EDIT",L"78",ES_AUTOHSCROLL,570,224,126,29,111);
         editOT=child(L"EDIT",L"5.3",ES_AUTOHSCROLL,810,184,126,29,112);editOR=child(L"EDIT",L"91",ES_AUTOHSCROLL,810,224,126,29,113);
         child(L"BUTTON",L"Értékek alkalmazása",BS_PUSHBUTTON,500,264,260,30,114);
         child(L"BUTTON",L"Újraindítás / reboot",BS_PUSHBUTTON,775,264,255,30,115);
         faultBox=child(L"COMBOBOX",L"",CBS_DROPDOWNLIST|WS_VSCROLL,500,328,530,270,120);
-        const std::array<const wchar_t*,8> faults{L"Nincs hiba",L"Pince szenzorhiba",L"Kültéri szenzorhiba",L"NaN pincehőmérséklet",L"Nincs érzékelt teljesítmény",L"Készülékhiba",L"Visszajelzés nem elérhető",L"Tele tartály (próbapadi injektálás)"};
+        const std::array<const wchar_t*,10> faults{L"Nincs hiba",L"Pince szenzorhiba",L"Kültéri szenzorhiba",L"NaN pincehőmérséklet",L"Nincs érzékelt teljesítmény",L"Készülékhiba",L"Visszajelzés nem elérhető",L"Úszókapcsoló: TARTÁLY MEGTELT",L"Úszójel hibás / vezetékszakadás",L"Pince RS485 kapcsolat: nincs érvényes adat"};
         for(auto f:faults) SendMessageW(faultBox,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(f));SendMessageW(faultBox,CB_SETCURSEL,0,0);
         dynamicCheck=child(L"BUTTON",L"Dinamikus klíma (víztömeg + hőmodell)",BS_AUTOCHECKBOX,500,362,530,27,121);
         playButton=child(L"BUTTON",L"▶ Indítás",BS_PUSHBUTTON,500,418,130,32,130);
@@ -288,19 +316,25 @@ LRESULT CALLBACK windowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
         for(auto s:{L"1×",L"10×",L"60×",L"600×"}) SendMessageW(speedBox,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(s));SendMessageW(speedBox,CB_SETCURSEL,1,0);
         child(L"BUTTON",L"+1 perc",BS_PUSHBUTTON,766,418,81,32,132);child(L"BUTTON",L"+10 perc",BS_PUSHBUTTON,858,418,82,32,133);child(L"BUTTON",L"+1 óra",BS_PUSHBUTTON,950,418,80,32,134);
         child(L"BUTTON",L"Próbapadi tartály ürítése + becslés nullázása",BS_PUSHBUTTON,500,457,530,26,135);
+        monitorCheck=child(L"BUTTON",L"Modell működésmérése (a kosárban nincs árammérő)",BS_AUTOCHECKBOX,500,690,530,25,140);
+        child(L"BUTTON",L"Korábbi érintős műszaki nézet",BS_AUTOCHECKBOX,45,69,410,26,141);
         SetTimer(hwnd,1,1000,nullptr);draft=session.configuration();record();return 0;
     }
     case WM_PAINT: {
         PAINTSTRUCT ps;HDC dc=BeginPaint(hwnd,&ps);HDC back=CreateCompatibleDC(dc);HBITMAP bitmap=CreateCompatibleBitmap(dc,1100,820);auto old=SelectObject(back,bitmap);draw(back);RECT client{};GetClientRect(hwnd,&client);SetStretchBltMode(dc,HALFTONE);StretchBlt(dc,0,0,client.right,client.bottom,back,0,0,1100,820,SRCCOPY);SelectObject(back,old);DeleteObject(bitmap);DeleteDC(back);EndPaint(hwnd,&ps);return 0;
     }
     case WM_LBUTTONUP: {
+        SetFocus(hwnd);
         int x=static_cast<int>(static_cast<short>(LOWORD(lp))/windowScale),y=static_cast<int>(static_cast<short>(HIWORD(lp))/windowScale);screenClick((x-sx)*320/sw,(y-sy)*480/sh);record();InvalidateRect(hwnd,nullptr,FALSE);return 0;
     }
+    case WM_KEYDOWN:
+        if(wp==VK_RIGHT) oled.next(session);else if(wp==VK_RETURN) oled.select(session);
+        record();InvalidateRect(hwnd,nullptr,FALSE);return 0;
     case WM_TIMER: if(playing) { try { session.advance(speed);record();InvalidateRect(hwnd,nullptr,FALSE); } catch(...) { playing=false;SetWindowTextW(playButton,L"▶ Indítás");notice=L"A fizikai modell kilépett a támogatott tartományból. Válassz új próbát.";InvalidateRect(hwnd,nullptr,FALSE); } } return 0;
     case WM_COMMAND: {
         const int id=LOWORD(wp),notification=HIWORD(wp);
         try {
-            if(id==100&&notification==CBN_SELCHANGE) { session.preset(static_cast<unsigned>(SendMessageW(presetBox,CB_GETCURSEL,0,0)));events.clear();lastReason.clear();draft=session.configuration();syncInputs();notice=L"Új próba betöltve; időzítők alaphelyzetben."; }
+            if(id==100&&notification==CBN_SELCHANGE) { session.preset(static_cast<unsigned>(SendMessageW(presetBox,CB_GETCURSEL,0,0)));events.clear();lastReason.clear();draft=session.configuration();oled=OledUi{};SendMessageW(monitorCheck,BM_SETCHECK,BST_UNCHECKED,0);syncInputs();notice=L"Új próba betöltve; időzítők alaphelyzetben."; }
             else if(id==114) { session.setClimate(input(editBT),input(editBR),input(editOT),input(editOR));notice=L"Új klíma alkalmazva. A vezérlő időzítői tovább futnak."; }
             else if(id==115) { session.reboot();events.clear();lastReason.clear();notice=L"Reboot: AUTO, biztonságos indulás, időzítők újraindultak. Konfig RAM-ban marad."; }
             else if(id==120&&notification==CBN_SELCHANGE) { session.setFault(static_cast<Fault>(SendMessageW(faultBox,CB_GETCURSEL,0,0)));notice=L"Hiba alkalmazva. A türelmi időt az időgombokkal léptetheted."; }
@@ -308,6 +342,8 @@ LRESULT CALLBACK windowProc(HWND hwnd,UINT msg,WPARAM wp,LPARAM lp) {
             else if(id==130) { playing=!playing;SetWindowTextW(playButton,playing?L"Ⅱ Szünet":L"▶ Indítás"); }
             else if(id==131&&notification==CBN_SELCHANGE) { const unsigned speeds[]{1,10,60,600};speed=speeds[static_cast<size_t>(SendMessageW(speedBox,CB_GETCURSEL,0,0))]; }
             else if(id>=132&&id<=134) session.advance(id==132?60:id==133?600:3600);
+            else if(id==140) { session.setPowerMonitor(SendMessageW(monitorCheck,BM_GETCHECK,0,0)==BST_CHECKED);notice=L"A működésmérés csak próbapadi modelladat; az úszó külön bemenet."; }
+            else if(id==141) legacyScreen=SendMessageW(reinterpret_cast<HWND>(lp),BM_GETCHECK,0,0)==BST_CHECKED;
             else if(id==135) { session.emptyTank();syncInputs();notice=L"Próbapadi tartály ürítve; kijelzett becslés nullázva."; }
         } catch(const std::exception&) { notice=L"Érvénytelen adat. Pince: 5…25 °C, 40…100%; kint: −15…38 °C, 20…100%."; }
         record();InvalidateRect(hwnd,nullptr,FALSE);return 0;
@@ -322,7 +358,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
     ULONG_PTR gdip=0;Gdiplus::GdiplusStartupInput inputGdip;Gdiplus::GdiplusStartup(&gdip,&inputGdip,nullptr);
     int argc=0;LPWSTR* argv=CommandLineToArgvW(GetCommandLineW(),&argc);
     if(argc>=2 && std::wstring(argv[1])==L"--ui-test") {
-        bool ok=true;
+        legacyScreen=true; bool ok=true;
         screenClick(115,400);ok=ok&&session.mode()==Mode::ManualVentilation&&session.output().fanRequested;
         screenClick(270,400);ok=ok&&session.mode()==Mode::Off&&!session.output().fanRequested;
         screenClick(200,454);ok=ok&&page==2;
@@ -332,10 +368,16 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
         screenClick(275,362);ok=ok&&settingsPage==1;
         screenClick(40,454);ok=ok&&page==0;
         screenClick(40,400);ok=ok&&session.mode()==Mode::Auto;
+        legacyScreen=false;oled=OledUi{};
+        screenClick(100,150);ok=ok&&oled.page()==0; // Display is not a touch input.
+        for(int i=0;i<3;++i)screenClick(60,330);
+        screenClick(250,330);screenClick(60,330);
+        ok=ok&&oled.editing()&&session.mode()==Mode::Auto;
+        screenClick(250,330);ok=ok&&!oled.editing()&&session.mode()==Mode::ManualVentilation;
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return ok?0:1;
     }
     if(argc>=3 && std::wstring(argv[1])==L"--render") {
-        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) page=std::clamp(std::stoi(argv[4]),0,4);if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
+        try { if(argc>=4) session.preset(static_cast<unsigned>(std::stoul(argv[3])));if(argc>=5) {unsigned target=static_cast<unsigned>(std::clamp(std::stoi(argv[4]),0,5));for(unsigned i=0;i<target;++i)oled.next(session);}if(argc>=6) session.advance(static_cast<unsigned>(std::stoul(argv[5])));draft=session.configuration();renderPng(argv[2]); }
         catch(...) { LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 1; }
         LocalFree(argv);Gdiplus::GdiplusShutdown(gdip);return 0;
     }
@@ -344,7 +386,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int show) {
     RECT work{};SystemParametersInfoW(SPI_GETWORKAREA,0,&work,0);
     windowScale=std::min({1.0,static_cast<double>(work.right-work.left-40)/1100,static_cast<double>(work.bottom-work.top-70)/820});
     RegisterClassW(&wc);RECT r{0,0,static_cast<LONG>(std::lround(1100*windowScale)),static_cast<LONG>(std::lround(820*windowScale))};AdjustWindowRect(&r,WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,FALSE);
-    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab 0.5 · egyértelmű készülékállapotok",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
+    HWND hwnd=CreateWindowExW(0,wc.lpszClassName,L"Pince Lab 0.6 · OLED, két gomb és úszókapcsoló",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX,CW_USEDEFAULT,CW_USEDEFAULT,r.right-r.left,r.bottom-r.top,nullptr,nullptr,instance,nullptr);
     if(!hwnd) { Gdiplus::GdiplusShutdown(gdip);return 1; }
     ShowWindow(hwnd,show);UpdateWindow(hwnd);
     MSG msg{};while(GetMessageW(&msg,nullptr,0,0)>0) { if(!IsDialogMessageW(hwnd,&msg)) {TranslateMessage(&msg);DispatchMessageW(&msg);} }

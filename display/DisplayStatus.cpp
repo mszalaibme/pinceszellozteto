@@ -20,6 +20,12 @@ DisplayStatus describe(const DisplaySession& s) {
     } else if(s.mode()==Mode::Off) {
         result.title=L"KÉZZEL\nKIKAPCSOLVA";
         result.explanation=L"A szárítás le van tiltva.\nÚjraindításhoz válaszd az AUTO módot.";
+    } else if(o.reasonCode==ReasonCode::TankFull) {
+        result.title=L"TARTÁLY MEGTELT\nPÁRAMENTESÍTŐ KI";
+        result.explanation=L"Ürítsd ki a víztartályt.\nA ventilátor ettől még működhet.";result.tone=StatusTone::Attention;
+    } else if(o.reasonCode==ReasonCode::TankSensorFailure) {
+        result.title=L"TARTÁLYJEL HIBÁS\nPÁRAMENTESÍTŐ KI";
+        result.explanation=L"Ellenőrizd az úszót és a vezetékét.\nA páramentesítőt letiltottuk.";result.tone=StatusTone::Error;
     } else if(o.reasonCode==ReasonCode::AutoRestartUnverified) {
         result.title=L"PÁRAMENTESÍTŐ\nNEM INDÍTHATÓ";
         result.explanation=L"Előbb ellenőrizd: áramszünet után\nmagától újraindul-e a készülék.";result.tone=StatusTone::Attention;

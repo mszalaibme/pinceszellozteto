@@ -1,4 +1,8 @@
-# Board inventory — NEEDS HARDWARE VERIFICATION
+# Aktuális hardverterv: OLED és két ESP32-C3
+
+A 0.6 változat az [OLED + két gomb + RS485 + úszó tervet](oled_hardware_plan.md) és a [friss kosarat](hestore_bom_2026-10-16.md) követi. Központi ESP32-C3/SH1106, második ESP32-C3 a pincei SHT30-nál, két MAX3485, külön TankReading. A korábbi CYD lista alább történeti referencia, nem az aktuális beszerzés. Az include/board_config.h helyőrzői továbbra sem kész C3 pin-kiosztás.
+
+## Korábbi CYD inventory — történeti, nem aktuális
 
 ESP32-3248S035C-CYD pontos revision és gyártói kapcsolási rajz nincs megadva. A típusnév alapján nem rendelünk GPIO-t.
 

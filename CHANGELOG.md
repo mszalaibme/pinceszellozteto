@@ -2,6 +2,15 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.6.0] - 2026-10-16
+
+- Alapértelmezett 128×64 SH1106 OLED-előnézet két fizikai gombbal, hat oldallal, mentés előtti mód/cél/minimum-hőmérséklet szerkesztéssel. A régi érintős nézet külön próbapadi opció.
+- Külön TankReading core bemenet: tele, hibás, elavult vagy jövőbeli jel letiltja a páramentesítőt, minimum BE és kézi üzem ellenére is; szellőztetés tovább lehetséges. Az úszó nem működésmérő.
+- Reprodukált hibás régi FullTank próba javítása: NoPowerDraw következtetés helyett közvetlen tartályjel. Red/green regresszió, reboot, minimum KI, ellentmondó Running feedback, OLED sorhossz és gombok ellenőrzése; 20 tesztcsoport.
+- A kosárnak megfelelően alapból ismeretlen működés-visszajelzés; opcionális virtuális mérés, úszóvezeték- és pincei RS485 adatvesztés-injektálás.
+- HESTORE kosár 53 926 Ft bruttó: külön kis vezérlők, OLED, RS485, 10 m réz adatkábel, 10 m úszóvezeték, úszó, gombok, táp és szerelési apróságok. ESP32 panelek 10–15 munkanap, kültéri érzékelő 3 munkanap.
+- Dokumentált távoli mérés és felügyelt úszóbemenet terve; valódi firmware/NVS és hálózati hardvervalidáció továbbra is hátra.
+
 ## [0.5.0] - 2026-10-16
 
 - Laikusoknak áttekinthető főoldal: csak T/RH, nagy szöveges döntés és két külön készülékállapot; a műszaki nedvességadatok külön oldalra kerültek.

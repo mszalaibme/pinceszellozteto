@@ -9,7 +9,7 @@ bool DryingController::setConfiguration(const Configuration& c) {
     config_=c; return true;
 }
 ControllerOutput DryingController::update(const ClimateReading& b,const ClimateReading& o,
-    const DehumidifierReading& feedback,Timestamp now) {
+    const DehumidifierReading& feedback,Timestamp now,const TankReading& tank) {
     ControllerOutput out;
     const bool valid=b.isFresh(now,config_.sensorTimeout) && o.isFresh(now,config_.sensorTimeout);
     const bool monitored=feedback.fresh(now,config_.dehumidifierMonitorTimeout)
@@ -62,6 +62,8 @@ ControllerOutput DryingController::update(const ClimateReading& b,const ClimateR
                  : out.differenceGm3>=config_.minVentilationHumidityAdvantage);
     const bool manualVent=mode_==Mode::On;
     const bool manualDehum=mode_==Mode::ManualDehumidifier;
+    const bool tankFault=tank.enabled && !tank.fresh(now,config_.sensorTimeout);
+    const bool tankBlocked=tank.enabled && (tank.full || tankFault);
     if(mode_==Mode::Auto) {
         if(b.humidityRH>=config_.targetBasementRH+config_.rhStartHysteresis) demand_=true;
         if(b.humidityRH<=config_.targetBasementRH) demand_=false;
@@ -72,7 +74,7 @@ ControllerOutput DryingController::update(const ClimateReading& b,const ClimateR
     if(fan_ && !manualDehum && !manualVent && outdoorSuitable && now-fanChanged_<config_.ventilationMinimumOnTime)
         wantVent=true;
     const bool deviceFault=monitored && feedback.feedback==DehumidifierFeedback::Fault;
-    if(dehum_ && !manualVent && !deviceFault && now-dehumChanged_<config_.dehumidifierMinimumOnTime) {
+    if(dehum_ && !manualVent && !deviceFault && !tankBlocked && now-dehumChanged_<config_.dehumidifierMinimumOnTime) {
         wantDehum=true; wantVent=false;
     }
     if(wantVent) {
@@ -87,6 +89,10 @@ ControllerOutput DryingController::update(const ClimateReading& b,const ClimateR
     }
     if(!wantDehum)
         return finish(false,false,ControllerState::Idle,ReasonCode::HumidityOK,"HUMIDITY_OK");
+    if(tankBlocked)
+        return finish(false,false,ControllerState::DehumidifierError,
+            tankFault?ReasonCode::TankSensorFailure:ReasonCode::TankFull,
+            tankFault?"TANK_SENSOR_FAILURE":"TANK_FULL");
     if(!config_.dehumidifierAutoRestartSupported)
         return finish(false,false,ControllerState::DehumidifierError,ReasonCode::AutoRestartUnverified,"AUTO_RESTART_NOT_VERIFIED");
     if(deviceFault)

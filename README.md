@@ -1,6 +1,6 @@
 # Pince-szellőztető és páramentesítő vezérlő
 
-**0.5.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
+**0.6.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
 A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
@@ -8,11 +8,11 @@ A [szimulációs kiegészítés eredményei](docs/simulation_addendum_results.md
 
 ## Interaktív kijelző Windowsra
 
-A főoldalon a készülékek állapota nagy, közérthető feliratként jelenik meg. Az indítás előtti védelmi szünetnél a készülék neve és a hátralévő perc/másodperc látszik. A delta, abszolút nedvesség és harmatpont a KÉSZÜLÉK → MŰSZAKI ADATOK oldalra került. A „MŰKÖDIK” csak visszajelzéssel igazolt páramentesítőnél jelenik meg.
+Alapból **1,3 hüvelykes, 128×64 OLED és két fizikai gomb** próbálható ki. KÖVETKEZŐ: lapozás; OK: szerkesztés/mentés. Hat oldal: klíma és kimenetek, döntés indoka, tartály/visszajelzés, üzemmód, cél-RH, minimum pincehőmérséklet. A tartály úszójele MEGTELT / NEM TELE / HIBÁS, nem fiktív százalék.
 
-A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. Kattintható 320×480-as kijelző, négy oldal, AUTO/VENTI/PÁRAM./OFF, 18 beállítás, nyolc előre beállított próba, szerkeszthető klíma, hibainjektálás, időgyorsítás, reboot és tartályürítés. A döntést a meglévő C++ DryingController hozza; a Windows-rajzolás natív GDI UI-prototípus. A firmware LVGL-renderelője még nincs implementálva.
+A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. A jobb oldali próbapadon klíma, idő, hibák, reboot és tartályürítés állítható. Az úszójel külön core bemenet: tele vagy hibás jel a minimum BE időt és a kézi páramentesítést is felülírja. A pincei RS485 adatvesztés kipróbálható. Árammérő nincs a kosárban, ezért a működés-visszajelzés alapból ismeretlen; a modellmérés külön opció. A korábbi érintős műszaki nézet jelölőnégyzettel előhívható.
 
-[Kijelző használati útmutató](docs/display_simulator.md). A rögzített klíma a döntések próbája; bekapcsolható a víztömeg- és hőmodell is. Az idő alapból áll, a minimum KI idők érvényesek.
+[Kijelző használati útmutató](docs/display_simulator.md) · [OLED és távoli mérés terve](docs/oled_hardware_plan.md). A közös C++ mag fut; a valódi SH1106/GPIO/RS485 firmware-adapter és NVS még hátra van. A rögzített klíma döntési próba, a dinamikus mód víztömeg- és hőmodell.
 
 ## Windows batch szimuláció
 
@@ -37,6 +37,7 @@ Nincs szükség ESP32-re, LVGL-re, 230 V-ra, Pythonra vagy telepítésre. A bön
 - Cél+RH-hiszterézis indítás, cél-RH leállási igény, AH hiszterézis, tényleges szárítási irányt ellenőrző vízgőznyomás-védelem.
 - Külön minimum BE/KI idők; kompresszor-késleltetés boot és manuális kérés után is.
 - Szenzorhibánál mindkét AUTO kimenet KI; kézi kimenet szenzorfigyelmeztetéssel lehetséges.
+- Külön felügyelt tartálybemenet, tele/hibás/elavult jelre páramentesítő KI, kézi kérés és minimum BE idő ellenére is.
 - Restart capability, command/feedback megkülönböztetés, no-power grace, készülékhiba, hatástalansági warning, opcionális ESTIMATED tartály.
 - Víztömegmérleg, falforrás, analitikus légcsere, egyszerű termikus modell, T/RH-függő készülékkivonás, tényleges tartálytelítettség és ürítés.
 - Mind a 12 előírt forgatókönyv, CSV és offline HTML grafikonok; opcionális matplotlib tool.
@@ -53,7 +54,7 @@ A régi `VentilationController` a történeti regressziókhoz megmaradt. Új int
 | 3: készülék-, tartály-, feedbackmodell, kompresszorvédelem | Kész, tesztelt |
 | 4: teljes PC-futtató, 12 forgatókönyv, CSV, grafikon | Kész, Windows-csomag |
 | 5: ESP32 szenzor/relé/monitor adapterek | Interfészek kész; hardverimplementáció hátra |
-| 6: LVGL kijelző | Windows UI-prototípus és interakciók kész; firmware LVGL-renderelő hátra |
+| 6: kijelző | OLED + kétgombos Windows-prototípus kész; SH1106 firmware-renderelő hátra |
 | 7: NVS és settings | Hátra |
 | 8: Wi-Fi, REST, firmware web UI | Hátra |
 | 9: teljes hardveres validáció | Hátra; core-regressziók már futnak |

@@ -2,6 +2,15 @@
 #include "ClimateData.h"
 #include <limits>
 namespace ventilation {
+// Independent low-voltage float input, never a proof of compressor operation.
+// Disabled is optional; enabled but stale/invalid inhibits the compressor.
+struct TankReading {
+    bool enabled=false, full=false, valid=false;
+    Timestamp measuredAtMs=0;
+    bool fresh(Timestamp now, Timestamp timeout) const {
+        return valid && measuredAtMs<=now && now-measuredAtMs<timeout;
+    }
+};
 enum class DehumidifierFeedback { Unknown, Off, Starting, Running, NoPowerDraw, Fault };
 struct DehumidifierReading {
     DehumidifierFeedback feedback = DehumidifierFeedback::Unknown;

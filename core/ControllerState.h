@@ -11,7 +11,7 @@ enum class ControllerState {
 };
 enum class ReasonCode { HumidityOK, OutdoorAirDrier, DehumidifierPreferred, Manual,
     SensorFailure, TooCold, MinimumOn, MinimumOff, AutoRestartUnverified,
-    NoPowerDraw, DeviceFault, ClockFailure };
+    NoPowerDraw, DeviceFault, ClockFailure, TankFull, TankSensorFailure };
 const char* stateName(ControllerState state);
 struct ControllerOutput {
     bool fanRequested = false;

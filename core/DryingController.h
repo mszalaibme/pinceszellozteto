@@ -12,7 +12,7 @@ public:
     Mode mode() const { return mode_; }
     void resetTankEstimate() { estimateLiters_=0; }
     ControllerOutput update(const ClimateReading& basement, const ClimateReading& outside,
-        const DehumidifierReading& feedback, Timestamp now);
+        const DehumidifierReading& feedback, Timestamp now, const TankReading& tank = {});
 private:
     Configuration config_;
     Mode mode_ = Mode::Auto;

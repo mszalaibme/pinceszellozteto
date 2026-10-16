@@ -4,7 +4,7 @@
 #include "simulator/DehumidifierModel.h"
 #include <deque>
 namespace ventilation::display {
-enum class Fault { None, BasementSensor, OutdoorSensor, NaN, NoPower, Appliance, UnknownFeedback, FullTank };
+enum class Fault { None, BasementSensor, OutdoorSensor, NaN, NoPower, Appliance, UnknownFeedback, FullTank, TankSensor, BasementLink };
 struct Sample { double seconds, rh, temperature; bool fan, dehumidifier; };
 // Interactive boundary conditions are separate from the shared production controller.
 class DisplaySession {
@@ -28,6 +28,9 @@ public:
     ClimateReading basement() const;
     ClimateReading outside() const;
     DehumidifierReading feedback() const;
+    TankReading tankReading() const;
+    void setPowerMonitor(bool enabled) { powerMonitor_=enabled; refresh(); }
+    bool powerMonitor() const { return powerMonitor_; }
     const ControllerOutput& output() const { return output_; }
     double actualTank() const;
     double actualRuntime() const { return appliance_.runtimeSeconds(); }
@@ -41,6 +44,7 @@ private:
     Timestamp now_=0;
     Fault fault_=Fault::None;
     bool dynamic_=false;
+    bool powerMonitor_=false;
     std::deque<Sample> history_;
     void sample();
 };

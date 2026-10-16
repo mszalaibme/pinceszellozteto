@@ -1,58 +1,46 @@
-# Interaktív Windows kijelzőszimulátor
+# Windows OLED kijelzőszimulátor 0.6
 
-## Egyértelmű állapotok (0.5)
+A START.cmd vagy pince-kijelzo.exe indítja. Telepítés, Python és hardver nem kell. A bal oldali készülék 1,3 hüvelykes, 128×64 képpontos SH1106 OLED nagyított előnézete. A kijelző nem érintőfelület; alatta két kattintható fizikai gomb van.
 
-A főoldalon csak a két hőmérséklet és páratartalom, a szöveges döntés és a készülékek állapota szerepel. Nincs ΔAH, g/m³ vagy harmatpont. Ezek a KÉSZÜLÉK → MŰSZAKI ADATOK oldalon érhetők el.
+## Két gomb
 
-A korábbi „várakozás” minimum kikapcsolási időt jelentett. Most a képernyő kimondja: MOST EGYIK KÉSZÜLÉK SEM MEGY, megnevezi az indulásra jogosult készüléket és a hátralévő időt percben/másodpercben. A számláló az indítás legkorábbi lehetőségét jelenti: a feltételeket akkor újra ellenőrzi a vezérlés. A minimum KI idők nem változtak.
+**KÖVETKEZŐ**: lapozás a hat oldal között. **OK**: az üzemmód/célérték/minimum hőmérséklet oldalán szerkesztés indítása, majd mentés. Szerkesztés közben a KÖVETKEZŐ a választást/értéket lépteti. A változás csak OK-val kerül a valódi C++ vezérlőhöz. A cél 40–85% között, 1%-onként, a minimum hőmérséklet 5–20°C között, 0,5°C-onként körbefordul. Érvénytelen cél >= riasztás nem menthető; a következő gombbal lépj tovább. Billentyűzethez előbb kattints a készülék előlapjára: jobbra nyíl = KÖVETKEZŐ, Enter = OK.
 
-A ventilátor BEKAPCSOLVA felirata a kimenet bekapcsolását jelenti; forgásérzékelő nincs. A páramentesítő MŰKÖDIK állapota külön visszajelzést igényel. Ha csak tápot kapcsoltunk, MÉG NEM MEGY jelenik meg; visszajelzés hiányában NEM IGAZOLT, elmaradt működésnél NEM MŰKÖDIK. A konnektor bekapcsolása nem egyenlő a kompresszor működésével. A tele tartályt továbbra sem diagnosztizálja biztosan.
+1. **Főoldal:** pince/kültér T és RH, ventilátor BE/KI, páramentesítő táp BE/KI, tartály- és érzékelőriasztás. AUTO akkor is figyel, amikor mindkét kimenet KI.
+2. **Mi történik?**: a döntés közérthető indoka, a védelmi szünetből hátralévő perc/másodperc. A számláló a legkorábbi indulási lehetőség, akkor újra ellenőrizzük a klímát.
+3. **Tartály/visszajelzés:** MEGTELT, NEM TELE vagy HIBÁS úszójel. Nem mutat fiktív százalékot/litert. Külön felirat jelzi, hogy a működés nincs igazolva.
+4. **Üzemmód:** AUTO, kézi ventilátor, kézi páramentesítő, KI. OK, majd KÖVETKEZŐ, majd OK.
+5. **Cél páratartalom:** menthető célérték.
+6. **Minimum pincehőmérséklet:** menthető szellőztetési alsó határ.
 
-A jobb oldalon az idő külön HALAD / SZÜNETEL jelölést kap. Az AUTO vezérlés aktív lehet úgy is, hogy mindkét készülék kikapcsolva van.
+Az RH a kijelzett célérték és a szenzor mérése; a dinamikus modell továbbra is a vízgőz tömegét számolja. A kijelző nem lineárisan mozgatja az RH-t.
 
-Indítás: **START.cmd** vagy **pince-kijelzo.exe**. Nincs böngésző-, Python-, ESP32- vagy LVGL-függőség. A 320×480-as kijelző 125%-os nézetben jelenik meg; kisebb asztalon az egész ablak arányosan csökken. Az egér az érintést helyettesíti.
+## Próbapad
 
-Ez a kijelző működését bemutató natív Windows UI-prototípus. A rajzolás Win32/GDI, a döntést a meglévő **DryingController C++ mag** hozza. A firmware-re telepíthető LVGL-renderelő és a hardverillesztés későbbi munka; a Windows-kijelző nem bizonyítja azok működését.
+A jobb oldalon szerkeszthető a két klíma, választható nyolc előre beállított próba, tíz hibajelzés, időgyorsítás, +1 perc / +10 perc / +1 óra, reboot, tartályürítés és dinamikus fizika. Az idő alapból áll. A Tél próbán +10 perc után szellőztet; Nyáron +10 perc után a páramentesítő tápját kapcsolja.
 
-## Amit ki lehet próbálni
+**A kosárban nincs árammérő**, ezért a működés-visszajelzés alapból Unknown. A táp BE nem bizonyítja a kompresszor működését. A „Modell működésmérése” jelölőnégyzet a próbapadon bekapcsolja a virtuális mérést a régi feedback-esetekhez. Ez nem új fizikai alkatrész. Új próba kiválasztása kikapcsolja ezt az opciót.
 
-- **Főoldal:** pince és kültér T/RH, aktuális döntés és közérthető indok, ventilátor- és készülékállapot. Az AUTO / VENTI / PÁRAM. / OFF gombok működnek.
-- **Készülék:** parancs és külön visszajelzés, pillanatnyi szimulált mérési teljesítmény, parancs üzemideje, becsült tartály, ürítésgomb. Az ESTIMATED érték nem tényleges tartályérzékelő.
-- **Beállítás:** három oldalon 18 mező, +/−, MENTÉS és ALAPÉRTÉKEK. A módosítás csak mentéskor kerül az élő vezérlőre; az érvénytelen kombinációt elutasítja. Az alapértékek visszatöltése is tervezet, mentést igényel. A gyári core-alapértékben a készülék auto restartja NEM igazolt.
-- **Előzmény:** percenkénti RH- és hőmérsékletminta, legfeljebb 1441 pont. A minta kezdetben, illetve klímamódosításkor is bekerül. Azonos időpontban több próbapadi módosítás lehetséges.
+**Tele tartály**: a külön úszójel azonnal kikapcsolja a páramentesítőt, minimum BE idő és kézi kérés ellenére is. A ventilátor alkalmas kültéri klímánál használható. A készülék OK gombja nem törölheti a fizikai tele jelet. A jobb oldali „Próbapadi tartály ürítése” gomb a virtuális tartályt üríti és megszünteti a tele injektálását. Ezután is érvényes a kompresszor minimum KI ideje. A jel reboot után is megmarad.
 
-A jobb oldali próbapadon külön állítható a klíma, a hibainjektálás, az idő és a fizikai szimuláció. A döntési napló a döntési indok váltását rögzíti. A próbapad alján a modell ismert tartályszintje és kompresszorideje látható: ezek nem szivárognak át a készülék kijelzőjére.
+**Úszójel hibás / vezetékszakadás**: a felügyelt bemenet hibás jelét injektálja, letiltja a páramentesítőt. A valós kéteres NO érintkező önmagában nem ismeri fel a szakadást; ehhez a tervezett végellenállásos ADC adapter szükséges. **Pince RS485 kapcsolat**: az érvényes pinceadat elvesztését injektálja, AUTO-ban mindkét kimenet KI. Nem fizikai RS485 jel- vagy CRC-szimuláció.
 
-## Gyors próbák
+A „Korábbi érintős műszaki nézet” jelölőnégyzet a korábbi 320×480-as prototípust mutatja, benne 18 haladó beállítással és előzménnyel. Ez próbapadi segédnézet, a megvásárolandó OLED nem érintős. A nézet ugyanazt az élő sessiont használja.
 
-1. Válaszd a **Tél** próbát. Induláskor mindkét kimenet KI. Nyomd meg az **+10 perc** gombot: a minimum KI idő leteltével szellőztet.
-2. Válaszd a **Nyár** próbát. **+10 perc** után a konnektor BE; további **+1 perc** után a KÉSZÜLÉK oldalon MŰKÖDIK, kb. 300 W jelenik meg. Ez feltételezett készülékfogyasztás.
-3. Válaszd a **Tele tartály** próbát. A próba előrelépteti az időt a hiba láthatóságához (14:01). A konnektor BE, a visszajelzés NEM MŰKÖDIK. A kijelző csak tartály/készülék/táp ellenőrzését kéri, nem állít biztos hibadiagnózist. Az ürítésgomb megszünteti az injektált telítettséget és nullázza a becslést; az indulásnak újra van késleltetése.
-4. Válaszd a **Szenzorhiba** próbát. AUTO-ban mindkét kimenet KI; a kézi VENTI továbbra is választható, látható figyelmeztetéssel. NaN külön is injektálható.
-5. A **Restart nincs igazolva** próbában a vezérlő megtagadja a páramentesítő indítását. A BEÁLLÍTÁS második lapozása után az „Auto restart igazolt” mezővel tesztelhető a változás. Ez nem igazolja a valódi készülék képességét.
+## Fizika, reboot, készültség
 
-A nyolc előre beállított próba új sessiont indít: alapkonfiguráció, AUTO, alap időzítők, rögzített klíma. Az egyedi klíma alkalmazása megőrzi az időzítőket, és új fizikai pinceállapotot ad meg. A textbox értékek nem követik folyamatosan a dinamikus modellt; szerkeszthető új bemenetek maradnak.
+Rögzített klímánál a T/RH tesztbemenet, a készülék és a tartály órája fut. Dinamikus klímánál víztömeg- és hőmodell fut: 26,4 m³, 100 m³/h, 100 g/h forrás, 0,21 L/h referencia, feltételezett 300 W, 5 L tartály. Az utóbbi modellparaméterek nem új gyári adatok. A próbapad alján a modell által ismert tényleges tartály és kompresszoridő látható; ezek nem szivárognak az OLED-re.
 
-## Idő és fizika
+Reboot: AUTO, KI kimenetek, új minimum KI idő, RAM-ban megtartott konfiguráció és fizikai tartály; history/becslés nullázása. Az alkalmazás bezárása után a szerkesztett értékek elvesznek. NVS/flash mentés, valódi SH1106 firmware, GPIO, RS485 keretkezelés és úszó ADC adapter még nem készült el. A Windows UI Win32/GDI, a vezérlés a közös DryingController C++ mag.
 
-Alapból az idő áll. Az Indítás 1× / 10× / 60× / 600× gyorsítással lépteti; egy valós másodperc alatt ennyi szimulált másodperc fut. Az időgombok szünetben is működnek. Az UI-session vezérlője és fizikai modellje másodpercenként fut; ez az interaktív próbapad üteme, különbözik a batch konfigurálható 60 másodperces döntési ütemétől.
+## Tesztek és képek
 
-**Rögzített klíma** esetén a beírt T és RH külső tesztbemenet marad. Az időzítők, visszajelzés, kompresszor és tartály futnak; a pince vízmérlege ilyenkor szándékosan nem fizikai kísérlet. Ezzel pontosan kipróbálhatók az állapotok.
-
-**Dinamikus klíma** esetén ugyanaz a víztömeg- és termikus modell fut, mint a batchben: 26,4 m³, 100 m³/h, 100 g/h forrás, 0,21 L/h empirikus referencia, feltételezett 300 W, 5 L fizikai tartály. Az RH mindig a vízgőztömegből származik. A forrás és légcsere két fél lépésben fut a kivonás körül, majd az intervallum energiája fűti a termikus modellt. A kültéri határ itt rögzített, a téli napi profil a batchben érhető el. A kijelző „tartálybecslés méret” beállítása csak a vezérlő becslését módosítja, a próbapadi készülék 5 L-es fizikai tartályát nem.
-
-Hibainjektáláskor a NO_POWER / FAULT / tele tartály leállítja a próbapadi kompresszort; ismeretlen feedback esetén a készülék futhat, de a mérési jel nem elérhető. A tele tartály injektálása a próbapad ismert szintjét 5 L-nek mutatja, a becslést nem tölti fel. Ez tudatos teszteset, nem az addigi vízmérlegből felgyűlt víz.
-
-**Reboot:** AUTO mód, idő nullázása, kikapcsolt kimenetek, új minimum KI és startup idők. A pince és a modellben addig összegyűlt víz megmarad; a RAM-ban szerkesztett konfigurációt a próbapad megtartja. A kijelzett tartálybecslés és history nullázódik. NVS és valódi flash-restore nincs. Az alkalmazás bezárása után a szerkesztett beállítások elvesznek.
-
-## Tesztelés és képkimentés
-
-`test_display_session` a valódi core időzítőit, mind a nyolc próbát, a kézi módokat, NaN-t, hibát, rebootot, ürítést és dinamikus fizikát ellenőrzi. `display_touch_navigation` közvetlenül ugyanazokat a hitbox-kezelőket hívja, mint az egér: módváltás, tabok, +/−, lapozás és mentés. `display_render` ugyanazzal a GDI-renderelővel PNG-t generál. Ezek nem automatizálják a valódi Windows-egér- és ablakkezelést.
+20 CTest-csoport: korábbi fizikai/random regressziók, session, tank interlock, OLED sorhossz/mentés, valódi kattintási hitbox-kezelő és GDI render. A teljes Windows OS-eseményút nincs automatizálva.
 
 ```powershell
-.\pince-kijelzo.exe --render home.png 0 0 300
-.\pince-kijelzo.exe --render tank-warning.png 5 1
-.\pince-kijelzo.exe --render settings.png 0 2
+.\pince-kijelzo.exe --render oled-home.png 0 0 300
+.\pince-kijelzo.exe --render tank-full.png 5 0
+.\pince-kijelzo.exe --render reason.png 1 1
 ```
 
-Az argumentumok: PNG útvonal, próba index 0–7, képernyő 0–4 (4: műszaki adatok), opcionális további másodperc. A képméret 320×480. Az exportok vizuálisan ellenőrizhetők; az élő natív ablak teljes OS-eseményútja külön kézi próba.
+Argumentum: PNG út, próba index 0–7, OLED oldal 0–5, opcionális további másodperc. A kép 320×480, ezen belül látható a nagyított 128×64 panel.

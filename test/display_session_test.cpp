@@ -9,6 +9,7 @@ int main() {
     using namespace ventilation;
     using namespace ventilation::display;
     DisplaySession s;
+    s.setPowerMonitor(true);
     require(!s.output().fanRequested && !s.output().dehumidifierRequested);
     require(s.output().reasonCode==ReasonCode::MinimumOff);
     require(s.output().remainingWaitMs==300000);
@@ -20,7 +21,7 @@ int main() {
     s.setFault(Fault::NaN); require(s.output().sensorWarning && !s.output().fanRequested);
     s.setMode(Mode::ManualVentilation); require(s.output().fanRequested && s.output().sensorWarning);
     s.setMode(Mode::Off); require(!s.output().fanRequested);
-    s.preset(1); s.advance(600); require(s.output().dehumidifierRequested && !s.output().fanRequested);
+    s.preset(1); s.setPowerMonitor(true); s.advance(600); require(s.output().dehumidifierRequested && !s.output().fanRequested);
     require(!describe(s).dehumidifierConfirmedRunning && describe(s).dehumidifier==L"MÉG NEM MEGY");
     s.advance(60); require(s.feedback().feedback==DehumidifierFeedback::Running);
     require(describe(s).dehumidifierConfirmedRunning && describe(s).dehumidifier==L"MŰKÖDIK");
@@ -28,7 +29,7 @@ int main() {
     require(s.output().reasonCode==ReasonCode::NoPowerDraw && s.output().dehumidifierRequested);
     require(!describe(s).dehumidifierConfirmedRunning && describe(s).dehumidifier==L"NEM MŰKÖDIK");
     s.reboot(); require(s.now()==0 && s.mode()==Mode::Auto && !s.output().dehumidifierRequested);
-    s.preset(5); require(s.output().reasonCode==ReasonCode::NoPowerDraw && s.actualTank()==5);
+    s.preset(5); require(s.output().reasonCode==ReasonCode::TankFull && s.actualTank()==5);
     s.emptyTank(); require(s.actualTank()==0 && s.fault()==Fault::None && s.output().estimatedTankLevelLiters==0);
     s.preset(6); require(s.output().reasonCode==ReasonCode::AutoRestartUnverified && !s.output().dehumidifierRequested);
     s.preset(7); require(s.output().feedbackUnavailable && s.output().dehumidifierRequested);

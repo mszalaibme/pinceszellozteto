@@ -1,63 +1,59 @@
-# Takarékos HESTORE összeállítás – 2026-10-16
+# OLED-es HESTORE összeállítás – 2026-10-16
 
-**Aktuális, a felhasználó 45–55 ezer Ft-os alkatrészkeretéhez igazított kosár: bruttó 50 088 Ft, szállítás nélkül.** Nettó 39 439 Ft, ÁFA 10 649 Ft. A 135 684 Ft-os változat elvetve; megtakarítás 85 596 Ft. Rendelés és fizetés nem történt.
+**A böngészőben ellenőrzött kosár: bruttó 53 926 Ft, nettó 42 461 Ft + 11 465 Ft ÁFA. Szállítás nélkül. Rendelés/fizetés nem történt.**
 
-A kosár a megnyitott böngészőben van. A sima kosár-URL másik böngészőbe nem viszi át a tartalmat. A 17 cikkszám az eredeti 13 csoportos lista tételeit, plusz kijelződoboz-, DIN-sín- és modulösszekötő tartozékot tartalmaz; nem 17 új funkciót. Az egész forintos kereskedői kerekítés miatt az egységárból számolt és kijelzett sorösszeg kis mértékben eltérhet.
+A korábbi 50 088 Ft-hoz képest +3 838 Ft: most már megtartjuk az 5–6 m-re lévő pincei mérési pontot, hozzáadjuk a felügyelhető úszójelet, és az érintőpanel helyett kis OLED + két gomb kerül be. Az OLED + központi ESP32 ára kb. 8 953 Ft-tal kisebb az eredeti kijelzős panelénél; ebből finanszírozzuk a távoli csomópont és jelvezeték nagy részét.
 
-## Mit hagytunk el, és miért?
+**Beszerzés:** ESP32-C3-SUPERMINI: 10–15 munkanap; kültéri DF-SEN0385: 3 munkanap. A többi sornál a kosár nem jelzett külön várakozási időt. A táblázat a látható kosárból készült saját lista, nem a bolt hivatalos kosárexportja; a kosár URL-je másik böngészőbe nem viszi át a tartalmat.
 
-- Négy differenciális buszvégpont és a hosszú CAT6 kábelek: helyettük áthelyezett vezérlő és rövid érzékelővezetékek.
-- A második drága kültéri SHT31: a pincei érzékelő ismét az eredetileg kért SHT30-M.
-- TCA9548A: a pincei SHT30 címválasztásával elkerülhető a címütközés.
-- PZEM mérő és a hozzá tartozó UART-szintillesztő: külön működésmérés későbbi, opcionális bővítés.
-- Két 24 V-os kontaktor, tekercsmeghajtó és külön 24 V-os táp: egyetlen 230 V tekercses kontaktor marad a páramentesítőhöz, az eredeti két kis relémodullal.
-- Nagy 300×200-as szekrény és távoli elektronikadobozok: kisebb központi hálózati kötődoboz és egy kijelződoboz marad.
+## Tényleges tételek
 
-A korábbi drágább lista az alapfunkcióhoz nem volt szükséges; a távolságok megtartására és opcionális visszajelzésre túl sok kiegészítést vett fel.
-
-## Feltétel: a vezérlő helye változik
-
-A vezérlő és a külön hálózati doboz a pince külső falának közelébe kerül. A pincei SHT30 kb. 30–50 cm rövid vezetékkel, a kijelző/táp hőjétől távol, szellőző helyre kerüljön; ne közvetlenül a hideg falhoz, szellőző kifúvásba vagy a páramentesítő meleg légáramába. A kültéri szondát lehetőleg a saját 1 m-es vezetékével vezessük ki védett helyre. Ha ez a geometria nem tartható, először az elhelyezést kell egyeztetni, nem újabb drága hosszabbítót kosárba tenni.
-
-Az I2C kábelezésre nincs általános, garantált méterhatár: az órajel, kapacitás, felhúzók és zavarok is számítanak. Rövid vezetékkel indulunk, és a kész működést ellenőrizni kell. A pincei érzékelő eredeti 5–6 m-es távolságát ebben az összeállításban nem tartjuk meg.
-
-A ventilátor 3–4 m és a páramentesítő 6–7 m távolsága maradhat, ha megfelelő hálózati tápvezetéket kapnak. A kapcsolóelemek a központban maradnak, érzékelőbuszt vagy TTL UART-ot nem kell ezekhez kivezetni. Konkrét hálózati bekötést ez a lista nem ad.
-
-## A tényleges kosár
-
-| Tétel | Mennyiség | Nettó egységár | Nettó sorösszeg | Szerep |
+| Cikkszám és termék | Db / méter | Nettó egységár | Nettó sorösszeg | Szerep |
 |---|---:|---:|---:|---|
-| [ESP32-3248S035C-CYD](https://www.hestore.hu/prod_10050365.html) (100.503.65) | 1 | 9 903 Ft | 9 903 Ft | Kijelzős vezérlő, az eredetileg megadott panel. |
-| [DF-SEN0385](https://www.hestore.hu/prod_10052470.html) (100.524.70) | 1 | 7 902 Ft | 7 902 Ft | 1 időjárásálló kültéri SHT31, saját 1 m-es kábellel; a kosárban 3 munkanap. |
-| [KS 5V/2A/M](https://www.hestore.hu/prod_10038280.html) (100.382.80) | 1 | 2 014 Ft | 2 014 Ft | Egyetlen 5 V / 2 A microUSB táp. A 3,3 V-os relémodulok tápját megfelelő 3,3 V-os ágról kell adni, nem a GPIO-ról; a panel stabilizátorának terhelhetősége ellenőrizendő. |
-| [JT-A1250H-4P-300](https://www.hestore.hu/prod_10047751.html) (100.477.51) | 1 | 241 Ft | 241 Ft | A panelhez ajánlott 4 pólusú kábel; a konkrét lábkiosztást ellenőrizni kell. |
-| [RC-40-20/FF](https://www.hestore.hu/prod_10035719.html) (100.357.19) | 1 | 866 Ft | 866 Ft | 1 kisfeszültségű összekötő-készlet a modulokhoz; nem hálózati kábel. |
-| [CJMCU-2317](https://www.hestore.hu/prod_10048961.html) (100.489.61) | 1 | 1 241 Ft | 1 241 Ft | Az eredeti listában megadott GPIO-bővítő. Ha a konkrét panelen elég szabad GPIO igazolható, később elhagyható; erre most nem alapozunk megtakarítást. |
-| [STI1503](https://www.hestore.hu/prod_10044641.html) (100.446.41) | 1 | 1 442 Ft | 1 442 Ft | Külön, kisebb kijelződoboz-alap; 150×110×70 mm. Egyedi előlap/kivágás szükséges, a kivágott szerelvény IP65 védettsége nem automatikus. |
-| [DIN-TS35-60](https://www.hestore.hu/prod_10051529.html) (100.515.29) | 1 | 1 442 Ft | 1 442 Ft | 1 rövid DIN-sín a kontaktor rögzítéséhez. |
-| [PG9-WH](https://www.hestore.hu/prod_10042108.html) (100.421.08) | 3 | 231 Ft | 692 Ft | 3 tömszelence az 5–8 mm átmérőjű kábelekhez. Valós kábelmérettel ellenőrizendő. |
-| [WAGO 221-413](https://www.hestore.hu/prod_10036983.html) (100.369.83) | 5 | 252 Ft | 1 262 Ft | 5 WAGO vezetékösszekötő, az eredeti néhány darabos igényhez. |
-| [PG7-WH](https://www.hestore.hu/prod_10042101.html) (100.421.01) | 2 | 180 Ft | 360 Ft | 2 kisebb tömszelence a 3,5–6 mm kábelekhez, a külön kisfeszültségű dobozhoz. |
-| [ALFA AV-2+F](https://www.hestore.hu/prod_10044534.html) (100.445.34) | 1 | 2 270 Ft | 2 270 Ft | Földelt, fedeles kapcsolt dugalj a páramentesítőhöz. |
-| [SHT30-M](https://www.hestore.hu/prod_10048038.html) (100.480.38) | 1 | 858 Ft | 858 Ft | 1 pincei SHT30. A címválasztó AD ponttal másik I2C-címre állítandó, ezért nem kell TCA9548A. |
-| [RELC-1CH-3V-H](https://www.hestore.hu/prod_10042172.html) (100.421.72) | 2 | 764 Ft | 1 527 Ft | 2 eredetileg kért 3–3,3 V-os, aktív magas relémodul: ventilátor kapcsolójelölt és a páramentesítő kontaktorának vezérlése. A kompresszor nem közvetlenül erről kapcsolódik. A modul teljes hálózati kialakítása és induktív terhelhetősége még ellenőrizendő. |
-| [IKA20-20/230V](https://www.hestore.hu/prod_10040133.html) (100.401.33) | 1 | 4 822 Ft | 4 822 Ft | 1 Iskra IKA20-20/230V kontaktorjelölt, 230 V AC tekercs, két NO érintkező. Külön 24 V-os tápot és DC tekercsmeghajtót nem igényel. A hálózati tekercs vezérlése teljes egészében a védett hálózati térbe tartozik. |
-| [STI1504](https://www.hestore.hu/prod_10046615.html) (100.466.15) | 1 | 2 048 Ft | 2 048 Ft | IP65 kötődoboz-alap a hálózati résznek; 200×155×80 mm. A mechanikai elrendezés és érintésvédelem még tervezendő. |
-| [ALARM-4](https://www.hestore.hu/prod_10030746.html) (100.307.46) | 2 | 275 Ft | 549 Ft | 2 méter 4×0,22 mm² kábel a rövid érzékelő- és belső bekötésekhez, nem egyetlen 2 m-es I2C-szakasz előírása. Nem 230 V-os tápvezeték. |
+| [100.524.70 DF-SEN0385](https://www.hestore.hu/prod_10052470.html) | 1 | 7 902 Ft | 7 902 Ft | Kültéri SHT31, saját kb. 1 m kábel; 3 munkanap. |
+| [100.357.19 RC-40-20/FF](https://www.hestore.hu/prod_10035719.html) | 1 | 866 Ft | 866 Ft | Modulok rövid kisfeszültségű összekötése. |
+| [100.489.61 CJMCU-2317](https://www.hestore.hu/prod_10048961.html) | 1 | 1 241 Ft | 1 241 Ft | Központi I/O bővítő a gombokhoz és relékhez. |
+| [100.446.41 STI1503](https://www.hestore.hu/prod_10044641.html) | 2 | 1 442 Ft | 2 885 Ft | Központi kijelződoboz és pincei elektronika dobozalap; szenzor szellőzése külön. |
+| [100.515.29 DIN-TS35-60](https://www.hestore.hu/prod_10051529.html) | 1 | 1 442 Ft | 1 442 Ft | Kontaktor rövid DIN rögzítősínje. |
+| [100.421.08 PG9-WH](https://www.hestore.hu/prod_10042108.html) | 3 | 231 Ft | 692 Ft | Hálózati doboz tömszelence-jelöltek, kábelátmérő ellenőrizendő. |
+| [100.369.83 WAGO 221-413](https://www.hestore.hu/prod_10036983.html) | 5 | 252 Ft | 1 262 Ft | Hálózati vezetékösszekötők. |
+| [100.421.01 PG7-WH](https://www.hestore.hu/prod_10042101.html) | 5 | 112 Ft | 562 Ft | Központi és távoli kisfeszültségű kábelbevezetések. |
+| [100.445.34 ALFA AV-2+F](https://www.hestore.hu/prod_10044534.html) | 1 | 2 270 Ft | 2 270 Ft | Páramentesítő kapcsolt dugalja. |
+| [100.480.38 SHT30-M](https://www.hestore.hu/prod_10048038.html) | 1 | 858 Ft | 858 Ft | Pincei SHT30, rövid vezetéken a távoli ESP32-höz. |
+| [100.421.72 RELC-1CH-3V-H](https://www.hestore.hu/prod_10042172.html) | 2 | 764 Ft | 1 527 Ft | Ventilátor / kontaktortekercs kapcsolójelöltek; induktív terhelés és teljes panel ellenőrizendő. |
+| [100.401.33 IKA20-20/230V](https://www.hestore.hu/prod_10040133.html) | 1 | 4 822 Ft | 4 822 Ft | Páramentesítő kompresszorának külön kontaktorjelöltje. |
+| [100.466.15 STI1504](https://www.hestore.hu/prod_10046615.html) | 1 | 2 048 Ft | 2 048 Ft | Külön hálózati kötődoboz. |
+| [100.307.46 ALARM-4](https://www.hestore.hu/prod_10030746.html) | 10 | 172 Ft | 1 717 Ft | 10 m kisfeszültségű úszóvezeték és helyi kábelezési tartalék; nem 230 V-os kábel. |
+| [100.480.18 ESP32-C3-SUPERMINI](https://www.hestore.hu/prod_10048018.html) | 2 | 1 036 Ft | 2 072 Ft | Központi vezérlő + pincei mérőcsomópont; 10–15 munkanap. |
+| [100.479.54 D13-12864-I2C-WH](https://www.hestore.hu/prod_10047954.html) | 1 | 1 817 Ft | 1 817 Ft | 1,3 hüvelyk, 128×64, fehér SH1106 OLED. |
+| [100.519.19 MAX3485-RS485](https://www.hestore.hu/prod_10051919.html) | 2 | 663 Ft | 1 325 Ft | Egy RS485 adóvevő a központban, egy a pincében; 3,3 V logika. |
+| [100.416.25 P31-FLOATSW](https://www.hestore.hu/prod_10041625.html) | 1 | 1 095 Ft | 1 095 Ft | Tartály felső szintjének úszókapcsolója, csak kisfeszültségen. |
+| [100.383.25 KS 5V/2A/USB](https://www.hestore.hu/prod_10038325.html) | 1 | 1 450 Ft | 1 450 Ft | Közös 5 V / 2 A USB-A tápegység. |
+| [100.481.07 USB-C-1M-BK](https://www.hestore.hu/prod_10048107.html) | 1 | 691 Ft | 691 Ft | USB-A–C tápkábel a központi ESP32-C3-hoz. |
+| [100.446.08 DK-1511-V-305-1](https://www.hestore.hu/prod_10044608.html) | 10 | 155 Ft | 1 548 Ft | 10 m réz Cat5e: 5–6 m RS485/táplálás és ráhagyás. |
+| [100.478.63 PBS-11B-BK](https://www.hestore.hu/prod_10047863.html) | 2 | 238 Ft | 476 Ft | Két egyszerű panelgomb: KÖVETKEZŐ / OK. |
+| [100.387.25 STDN-3A24-ADJ](https://www.hestore.hu/prod_10038725.html) | 1 | 474 Ft | 474 Ft | Külön 3,3 V-os relétáp; beállítás és műszeres ellenőrzés kell. |
+| [100.258.78 10 K 5%](https://www.hestore.hu/prod_10025878.html) | 10 | 8,43 Ft | 84,30 Ft | Végellenállásos úszójel felügyelete, relé-bemeneti lehúzók; csomagár miatt 10 db. |
+| [100.261.61 ZL201-40G (WWS40G)](https://www.hestore.hu/prod_10026161.html) | 1 | 121 Ft | 121 Ft | Tördelhető tüskesor a két kis panelhez. |
+| [100.258.84 120 R 5%](https://www.hestore.hu/prod_10025884.html) | 2 | 34,82 Ft | 69,64 Ft | RS485 végponti lezárás, csak ha nincs már a modulon. |
+| [100.448.15 100nF / 50V RM5](https://www.hestore.hu/prod_10044815.html) | 10 | 21,29 Ft | 213 Ft | Kisfeszültségű szűrés/decoupling; 10 db csomagár. |
+| [100.367.69 DPCB-57](https://www.hestore.hu/prod_10036769.html) | 2 | 436 Ft | 871 Ft | Két forrasztható szerelőpanel a kisfeszültségű elektronikához. |
+| [100.259.28 330 R 5%](https://www.hestore.hu/prod_10025928.html) | 2 | 29,96 Ft | 59,92 Ft | RS485 nyugalmi bias pár, ha nincs megfelelő a modulon. |
 
+A kereskedő kerekített egységárakat/sorösszegeket mutat; ezekből újraszámolva néhány forint eltérés lehetséges. A végösszeg a bolt saját összesítője.
 
-## Amit az olcsóbb változat tud és nem tud
+## Elhelyezés, működés, korlátok
 
-A hőmérséklet/páratartalom alapján történő automatikus döntés és a két készülék kapcsolásának terve megmarad. **Külön teljesítmény- vagy működésmérő nincs a listában.** A vezérlő ezért valós hardveren a bekapcsolási parancsot ismeri, a kompresszor működését és a tartály tényleges telítettségét nem tudja biztosan megállapítani. A monitoradapter ilyenkor Unknown/NotAvailable állapotot adjon; a kijelző nem írhat igazolt MŰKÖDIK állapotot pusztán a bekapcsolási parancsból. A tartályszint legfeljebb becslés. A szimulátor modellből származó feedbackje nem helyettesíti a hardveres mérést.
+A pincei érzékelő a pincében marad. Rövid helyi I2C-vel olvassa a második ESP32, az 5–6 m adatút RS485. A kültéri szonda a központ közelében, saját kb. 1 m vezetékkel működik; ezt a valós felhúzókkal/órajellel tesztelni kell. A két szenzor külön buszon van, címválasztás miatti TCA nem szükséges. A teljes kisfeszültségű terv: [OLED és távoli mérés](oled_hardware_plan.md).
 
-A [Sensirion SHT3x gyártói adatlapja](https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf) 0–100% RH kiterjesztett mérési tartományt és 0x44/0x45 címválasztást ad meg. A korábbi, kereskedői 0–90%-os rövid leírásra alapozott SHT30-kizárás nem volt megalapozott. Ez nem jelent azonos pontosságot minden RH-n, és a nyitott modul nem időjárásálló. Az AD bekötését a konkrét modulon ellenőrizni kell.
+Az úszó egyetlen felső szintet jelez: MEGTELT / NEM TELE. Százalékot vagy litert nem mér. Külön működésmérő nincs a kosárban, ezért a páramentesítő táp BE nem igazolt kompresszorüzem. A kétvezetékes NO úszó szakadásának felismeréséhez végellenállásos ADC bemenet szükséges; a szoftveres TankReading interfész és a hibaág tesztelt, a fizikai adapter még elkészítendő. A tartály saját védelme megmarad.
 
-A relémodul kereskedői 10 A / 250 V felirata nem önmagában motoros minősítés. A 16 W-os ventilátorhoz és a kontaktortekercshez a végleges panel-, érintkező- és szigetelési megfelelőséget ellenőrizni kell; ezt a beszerzési jelöltet nem nevezem már validált hálózati kapcsolásnak. A páramentesítő kompresszorát továbbra is külön kontaktor kapcsolja. A [gyártói Iskra tanúsítvány](https://www.iskra.eu/f/docs/Iskra-Installation-Contactors/NL-101961_DEKRA_statement_ID_132138_eng3.pdf) az IKA20 NO változatára 9 A AC-3 terhelhetőséget ad meg; a konkrét készülék indítási áramával és a helyszíni védelemmel ezt is össze kell vetni.
+A kisfeszültségű elektronikát forrasztva, megfelelő rögzítéssel kell összeállítani; ez nem kész, csatlakoztatással azonnal használható vezérlő. A P31 mechanikai elférése és a kivehető tartály oldható csatlakozója még a valódi tartályhoz választandó. A dobozokhoz egyedi kivágás, szenzor-szellőzés és rögzítés szükséges; a kivágott doboz IP65-e nem automatikus. A panel GPIO-revízió, bootkimenetek, terhelés és távoli feszültségesés ellenőrzendő. A SH1106, RS485 és ADC hardveradapter, NVS és valós hálózati teszt hátra van.
 
-A panel pontos GPIO-kiosztása, a 3,3 V-os táp tartaléka, boot alatti kimenetek, kontaktor rögzítése, hálózati elválasztás és a páramentesítő áramszünet utáni újraindulása továbbra is ellenőrizendő. Ezek miatt nem adunk hozzá automatikusan újabb drága modult.
+A SHT30-M marad: a [Sensirion gyártói adatlap](https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf) 0–100% RH kiterjesztett mérési tartományt ad meg. Ez nem állandó pontosságot vagy kondenzációállóságot jelent. A nyitott modul nem időjárásálló. Az olcsó XY-MD02 kereskedői megadása 0–80% RH, ezért a 90–100%-os pincei követelményhez nem választottuk.
 
-## Keret és kimaradó telepítési költségek
+A két relémodul hálózati panelkialakítása és induktív terhelhetősége továbbra is ellenőrizendő; a 10 A felirat önmagában nem motoros minősítés. A kompresszor külön kontaktort kap. Az [Iskra tanúsítvány](https://www.iskra.eu/f/docs/Iskra-Installation-Contactors/NL-101961_DEKRA_statement_ID_132138_eng3.pdf) az IKA20 NO változatára 9 A AC-3 terhelhetőséget ad meg; a készülék indítási áramával összevetendő. Auto-restart képesség még nem igazolt.
 
-Az 55 000 Ft-os felső keretből **4 912 Ft marad**. Ebbe kell illeszteni a helyszín szerinti hálózati vezetéket és a még szükséges apró rögzítő-/szerelési anyagokat; ezek pontos költsége nincs igazolva. A 50 088 Ft ezért ellenőrzött kosárösszeg, nem teljes, munkadíjjal együtt garantált telepítési ár. Szállítás, villanyszerelői munkadíj és a meglévő áramkör esetleges védelmi átalakítása nincs benne. Ha a hátralévő anyagokkal az 55 000 Ft nem tartható, a tervet még rendelés előtt a kerethez kell igazítani.
+## Keret
 
-A kosár aktuális tételei megtalálhatók a HESTORE-ban; a kültéri érzékelő 3 munkanapos jelzést kapott. Kész, a CYD panelhez igazolt előlap/keret nincs kiválasztva: a dobozon saját kivágás és rögzítés szükséges.
+Az 55 000 Ft-os felső határból **1 074 Ft marad**. A kosár alkatrészlista, nem teljes telepítési ár. Nincs benne a helyszín szerinti 230 V tápvezeték pontos mennyisége, villanyszerelői munkadíj, szállítás, védelmi átalakítás, illetve a tartályhoz még kiválasztandó csatlakozópár és mechanikai rögzítés. A teljes kiépítés 55 000 Ft-on belülisége ezekkel együtt nincs igazolva; ennek ellenkezőjét nem állítjuk.

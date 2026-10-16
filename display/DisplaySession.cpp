@@ -27,19 +27,23 @@ void DisplaySession::setClimate(double bt,double br,double ot,double orh) {
 void DisplaySession::setFault(Fault f) { fault_=f; refresh(); }
 ClimateReading DisplaySession::basement() const {
     auto b=basement_.reading(now_);
-    if(fault_==Fault::BasementSensor) b.valid=false;
+    if(fault_==Fault::BasementSensor || fault_==Fault::BasementLink) b.valid=false;
     if(fault_==Fault::NaN) b.temperatureC=std::numeric_limits<double>::quiet_NaN();
     return b;
 }
 ClimateReading DisplaySession::outside() const { return {outsideT_,outsideRH_,now_,fault_!=Fault::OutdoorSensor}; }
 DehumidifierReading DisplaySession::feedback() const {
     auto f=appliance_.feedback(now_);
-    if(fault_==Fault::NoPower || fault_==Fault::FullTank) f={DehumidifierFeedback::NoPowerDraw,0,now_,true};
+    if(!powerMonitor_) f={DehumidifierFeedback::Unknown,std::numeric_limits<double>::quiet_NaN(),now_,false};
+    if(fault_==Fault::NoPower) f={DehumidifierFeedback::NoPowerDraw,0,now_,true};
     if(fault_==Fault::Appliance) f={DehumidifierFeedback::Fault,0,now_,true};
     if(fault_==Fault::UnknownFeedback) f={DehumidifierFeedback::Unknown,std::numeric_limits<double>::quiet_NaN(),now_,false};
     return f;
 }
-void DisplaySession::refresh() { output_=controller_.update(basement(),outside(),feedback(),now_); }
+TankReading DisplaySession::tankReading() const {
+    return {true,actualTank()>=5,fault_!=Fault::TankSensor,now_};
+}
+void DisplaySession::refresh() { output_=controller_.update(basement(),outside(),feedback(),now_,tankReading()); }
 double DisplaySession::actualTank() const { return fault_==Fault::FullTank?5:appliance_.tankLevelLiters(); }
 void DisplaySession::sample() {
     history_.push_back({static_cast<double>(now_)/1000,basement_.relativeHumidity(),basement_.temperatureC(),output_.fanRequested,output_.dehumidifierRequested});
