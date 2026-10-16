@@ -1,8 +1,10 @@
-# Windows szimulátor 0.3.0
+# Windows szimulátor 0.4.0
+
+A **START.cmd** vagy **pince-kijelzo.exe** megnyitja az interaktív kijelzőt. A képernyő gombjai kattinthatók; a jobb oldali próbapadon klíma, hibák, időléptetés és dinamika állítható. Az idő alapból áll: **+10 perc** után már letelnek az indulási minimum KI idők. Részletek: [kijelző útmutató](docs/display_simulator.md).
 
 Kicsomagolás után a `simulation-output/analysis.html` azonnal megnyitható: 950 elkészült futás, hat összehasonlító grafikon és eredménytábla. A `report.html` hat részletes idősor visszajátszását és tíz grafikont tartalmazza. Telepítés és Python nem szükséges.
 
-A `START.cmd` újraszámolja a 950 futást a `config/baseline.ini` alapján, majd megnyitja az elemzést. Ez több másodpercet igényelhet. A konfigurációt szövegszerkesztővel módosíthatod.
+A `BATCH.cmd` újraszámolja a 950 futást a `config/baseline.ini` alapján, majd megnyitja az elemzést. Ez több másodpercet igényelhet. A konfigurációt szövegszerkesztővel módosíthatod.
 
 ```powershell
 .\pinceszellozteto.exe --baseline --config config/baseline.ini --out baseline

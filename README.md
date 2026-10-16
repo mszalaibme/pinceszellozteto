@@ -1,14 +1,20 @@
 # Pince-szellőztető és páramentesítő vezérlő
 
-**0.3.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
+**0.4.0 · Windows x64 szimulátor + platformfüggetlen C++17 vezérlőmag.**
 
 A frissített [alapspecifikáció](docs/specification-v2.hu.md) szerint a rendszer szellőztetés, páramentesítés és IDLE között választ. Az új `DryingController` azonos kódja fut a PC-s szimulátorban és a tesztekben; a későbbi firmware ezt használja majd. A pince modellje vízgőztömeget számol, az RH levezetett érték.
 
 A [szimulációs kiegészítés eredményei](docs/simulation_addendum_results.md) tartalmazzák a 900 kombinációs rácsot, a kalibráció korlátait és a feltárt szabályozási problémát. A 0,21 L/h és 300 W feltételezés, nem gyári adat.
 
-## Windows: azonnal kipróbálható
+## Interaktív kijelző Windowsra
 
-A GitHub Actions sikeres futásából letölthető a **pinceszellozteto-windows-x64** artifact. Kicsomagolás után **START.cmd** futtatása indítja a 950 paraméteres szimulációt és megnyitja az offline grafikus riportot. Az artifact az EXE-t, előállított CSV-ket, a riportot és az indítási útmutatót is tartalmazza. Az aktuális feladat átadási ZIP-je ugyanezt a hordozható csomagot adja.
+A **START.cmd** a **pince-kijelzo.exe** alkalmazást indítja. Kattintható 320×480-as kijelző, négy oldal, AUTO/VENTI/PÁRAM./OFF, 18 beállítás, nyolc előre beállított próba, szerkeszthető klíma, hibainjektálás, időgyorsítás, reboot és tartályürítés. A döntést a meglévő C++ DryingController hozza; a Windows-rajzolás natív GDI UI-prototípus. A firmware LVGL-renderelője még nincs implementálva.
+
+[Kijelző használati útmutató](docs/display_simulator.md). A rögzített klíma a döntések próbája; bekapcsolható a víztömeg- és hőmodell is. Az idő alapból áll, a minimum KI idők érvényesek.
+
+## Windows batch szimuláció
+
+A GitHub Actions sikeres futásából letölthető a **pinceszellozteto-windows-x64** artifact. Kicsomagolás után **BATCH.cmd** futtatása indítja a 950 paraméteres szimulációt és megnyitja az offline grafikus riportot. Az artifact az EXE-t, előállított CSV-ket, a riportot és az indítási útmutatót is tartalmazza. Az aktuális feladat átadási ZIP-je ugyanezt a hordozható csomagot adja.
 
 Nincs szükség ESP32-re, LVGL-re, 230 V-ra, Pythonra vagy telepítésre. A böngészőben forgatókönyv-választó, időcsúszka, visszajátszás, tíz grafikon és állapotnézet érhető el. A böngésző már kiszámolt adatokat mutat; új paraméterekkel az EXE számol újra.
 
@@ -45,7 +51,7 @@ A régi `VentilationController` a történeti regressziókhoz megmaradt. Új int
 | 3: készülék-, tartály-, feedbackmodell, kompresszorvédelem | Kész, tesztelt |
 | 4: teljes PC-futtató, 12 forgatókönyv, CSV, grafikon | Kész, Windows-csomag |
 | 5: ESP32 szenzor/relé/monitor adapterek | Interfészek kész; hardverimplementáció hátra |
-| 6: LVGL kijelző | Hátra |
+| 6: LVGL kijelző | Windows UI-prototípus és interakciók kész; firmware LVGL-renderelő hátra |
 | 7: NVS és settings | Hátra |
 | 8: Wi-Fi, REST, firmware web UI | Hátra |
 | 9: teljes hardveres validáció | Hátra; core-regressziók már futnak |

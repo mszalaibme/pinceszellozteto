@@ -27,9 +27,13 @@ jobs:
           build/Release/pinceszellozteto.exe --batch --config config/baseline.ini --out package/simulation-output
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item build/Release/pinceszellozteto.exe package/
-          Copy-Item tools/windows-launch.cmd package/START.cmd
+          Copy-Item build/Release/pince-kijelzo.exe package/
+          Copy-Item tools/windows-display.cmd package/START.cmd
+          Copy-Item tools/windows-launch.cmd package/BATCH.cmd
           Copy-Item docs/windows_quickstart.md package/README.md
           Copy-Item config package/config -Recurse
+          Copy-Item docs package/docs -Recurse
+          Copy-Item build/display-preview.png package/display-preview.png
       - name: Independent water and energy audit
         run: python tools/audit_batch.py package/simulation-output/sensitivity-summary.csv
       - name: Dashboard logic smoke test (mock DOM)

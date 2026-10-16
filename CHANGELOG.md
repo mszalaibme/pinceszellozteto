@@ -2,6 +2,14 @@
 
 A projekt változásai verziónként. A dátum formátuma ÉÉÉÉ-HH-NN.
 
+## [0.4.0] - 2026-10-16
+
+- Interaktív Windows kijelzőalkalmazás a változatlan DryingController maggal, négy kattintható 320×480-as oldallal.
+- Klíma és hibainjektálás, nyolc próba, időgyorsítás, kézi módok, 18 szerkeszthető beállítás, reboot és tartályürítés.
+- Külön rögzített tesztklíma és kapcsolható víztömeg/hőmodell; parancs, feedback és ESTIMATED tartály elkülönítése.
+- 18 CTest csoport: session-regressziók, érintési hitboxok és natív PNG-renderelés. Ablak illeszkedése kisebb Windows asztalhoz.
+- START.cmd az interaktív kijelzőt indítja, BATCH.cmd a 950 futást. A firmware LVGL-renderelő továbbra is hátralévő munka.
+
 ## [0.3.0] - 2026-10-16
 
 - Konfigurálható 26,4 m³ baseline, empirikus 0,21 L/h készülékgörbe, feltételezett 300 W, 5 L tartály; ismeretlen gyári adatok elkülönítve.
